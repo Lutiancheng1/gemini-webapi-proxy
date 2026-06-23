@@ -1,0 +1,35 @@
+services:
+  gemini-openai-proxy:
+    image: ghcr.io/lutiancheng1/gemini-openai-proxy:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      network: host          # build needs the host's network to reach apt + pip mirrors
+      args:
+        GOP_BUILD_HTTP_PROXY: ${GOP_BUILD_HTTP_PROXY:-http://127.0.0.1:7897}
+    container_name: gemini-openai-proxy
+    network_mode: host      # runtime: share the host's loopback so host.docker.internal isn't needed
+    env_file:
+      - path: .env
+        required: false
+      - path: data/runtime.env
+        required: false
+    environment:
+      GOP_PORT: "4982"
+      GOP_COOKIE_SOURCE: "env"
+      GOP_PROBE_ON_START: "false"
+      GOP_LOG_FORMAT: "json"
+      GOP_HTTP_PROXY: ${GOP_HTTP_PROXY:-http://127.0.0.1:7897}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - "CMD"
+        - "python"
+        - "-c"
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4982/health', timeout=5)"
+      interval: 30s
+      timeout: 8s
+      retries: 3
+      start_period: 90s

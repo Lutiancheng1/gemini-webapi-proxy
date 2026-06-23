@@ -1,0 +1,201 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gemini-openai-proxy"
+dynamic = ["version"]
+description = "OpenAI-compatible API gateway for Google Gemini Web (powered by gemini-webapi)"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+requires-python = ">=3.10"
+authors = [
+  { name = "lutiancheng", email = "85276107+Lutiancheng1@users.noreply.github.com" },
+]
+keywords = [
+  "openai",
+  "gemini",
+  "proxy",
+  "api",
+  "fastapi",
+  "llm",
+  "image-generation",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Framework :: FastAPI",
+  "Intended Audience :: Developers",
+  "Operating System :: MacOS :: MacOS X",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Typing :: Typed",
+]
+
+# ---- Runtime dependencies -------------------------------------------------
+# gemini-webapi is REQUIRED (it is the only backend the default cookie-source
+# can use). It is licensed GPL-3.0, which is why this project is GPL-3.0.
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+  "pydantic>=2.5",
+  "pydantic-settings>=2.1",
+  "httpx>=0.27",
+  "curl-cffi>=0.7",
+  "playwright>=1.49",
+  "gemini-webapi>=2.0",
+  "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+# browser-cookie3 is only needed for the "browser" cookie source
+browser-cookie = ["browser-cookie3>=0.19"]
+dev = [
+  "pytest>=8",
+  "pytest-asyncio>=0.23",
+  "pytest-cov>=5",
+  "respx>=0.21",
+  "ruff>=0.5",
+  "mypy>=1.10",
+  "types-requests",
+  "pre-commit>=3.8",
+  "build>=1.2",
+  "twine>=5",
+]
+
+[project.urls]
+Homepage = "https://github.com/Lutiancheng1/gemini-openai-proxy"
+Documentation = "https://github.com/Lutiancheng1/gemini-openai-proxy/tree/main/docs"
+Issues = "https://github.com/Lutiancheng1/gemini-openai-proxy/issues"
+Changelog = "https://github.com/Lutiancheng1/gemini-openai-proxy/releases"
+Funding = "https://github.com/sponsors/Lutiancheng1"
+
+[project.scripts]
+gemini-openai-proxy = "gemini_openai_proxy.__main__:main"
+gop = "gemini_openai_proxy.__main__:main"
+
+# ---- Hatch configuration -------------------------------------------------
+[tool.hatch.version]
+path = "src/gemini_openai_proxy/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gemini_openai_proxy"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "src/gemini_openai_proxy",
+  "tests",
+  "docs",
+  "README.md",
+  "README.zh.md",
+  "LICENSE",
+  "NOTICE",
+  "CHANGELOG.md",
+  "pyproject.toml",
+]
+
+# ---- Ruff ----------------------------------------------------------------
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E",    # pycodestyle errors
+  "F",    # pyflakes
+  "W",    # pycodestyle warnings
+  "I",    # isort
+  "N",    # pep8-naming
+  "UP",   # pyupgrade
+  "B",    # flake8-bugbear
+  "C4",   # flake8-comprehensions
+  "DTZ",  # flake8-datetimez
+  "PIE",  # flake8-pie
+  "RET",  # flake8-return
+  "SIM",  # flake8-simplify
+  "TID",  # flake8-tidy-imports
+  "ARG",  # flake8-unused-arguments
+  "PL",   # pylint
+  "RUF",  # ruff-specific
+]
+ignore = [
+  "PLR0913",  # too-many-arguments
+  "PLR2004",  # magic-value-comparison
+  "E501",     # line-too-long (handled by formatter)
+  "PLR0912",  # too-many-branches
+  "PLR0915",  # too-many-statements
+  "PLR0911",  # too-many-return-statements (error mappers naturally branch on type)
+  "PLC0415",  # intentional local imports (deferred / cycle-break)
+  "ARG001",   # unused function arg — many of these are public API surface
+  "ARG002",   # unused method arg — same
+  "PLW0603",  # global-statement — used deliberately for module-level singletons
+  "SIM105",   # try/except-pass — many are intentional best-effort cleanup paths
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "PLR2004", "ARG", "PT011"]
+"scripts/**" = ["T201"]
+"docs/**" = ["RUF"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+# ---- Mypy ----------------------------------------------------------------
+[tool.mypy]
+python_version = "3.10"
+strict = false
+warn_unused_ignores = true
+warn_redundant_casts = true
+disallow_incomplete_defs = true
+no_implicit_optional = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "gemini_webapi.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "browser_cookie3.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "curl_cffi.*"
+ignore_missing_imports = true
+
+# ---- Pytest --------------------------------------------------------------
+[tool.pytest.ini_options]
+minversion = "8.0"
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = [
+  "-ra",
+  "--strict-markers",
+  "--strict-config",
+  "--tb=short",
+]
+markers = [
+  "live: requires real Gemini cookies and network (skipped in CI)",
+  "slow: long-running test (skipped in CI fast path)",
+]
+
+# ---- Coverage ------------------------------------------------------------
+[tool.coverage.run]
+source = ["src/gemini_openai_proxy"]
+omit = ["*/tests/*", "*/__main__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "raise NotImplementedError",
+  "if TYPE_CHECKING:",
+  "if __name__ == .__main__.:",
+]
+show_missing = true
+skip_covered = false
+fail_under = 60

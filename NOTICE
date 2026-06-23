@@ -1,0 +1,52 @@
+gemini-openai-proxy
+Copyright (C) 2025 lutiancheng
+
+This product includes software developed by third parties:
+
+────────────────────────────────────────────────────────────────────────
+gemini-webapi
+  Copyright (C) 2024 HanaokaYuzu
+  License: GPL-3.0
+  Source:  https://github.com/HanaokaYuzu/Gemini-API
+────────────────────────────────────────────────────────────────────────
+
+gemini-webapi is a reverse-engineered client of the Gemini Web frontend.
+By installing gemini-webapi (a runtime dependency of this project) you
+agree to its GPL-3.0 license. See the gemini-webapi repository for its
+own license text and additional notices.
+
+────────────────────────────────────────────────────────────────────────
+browser-cookie3
+  License: BSD-3-Clause / MIT
+  Source:  https://github.com/borisbabic/browser_cookie3
+────────────────────────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────────────────
+FastAPI
+  Copyright (c) 2018 Sebastián Ramírez
+  License: MIT
+  Source:  https://github.com/tiangolo/fastapi
+────────────────────────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────────────────
+Pydantic / pydantic-settings
+  License: MIT
+  Source:  https://github.com/pydantic/pydantic
+────────────────────────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────────────────
+curl-cffi
+  Copyright (c) 2018 multippt
+  License: MIT
+  Source:  https://github.com/yifeikong/curl_cffi
+────────────────────────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────────────────
+Playwright
+  Copyright (c) Microsoft Corporation
+  License: Apache-2.0
+  Source:  https://github.com/microsoft/playwright-python
+────────────────────────────────────────────────────────────────────────
+
+The full license texts for these dependencies are either included in
+their respective distributions or available at the URLs above.
