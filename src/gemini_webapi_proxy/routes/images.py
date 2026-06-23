@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
-
 from fastapi import APIRouter, Depends
 
 from gemini_webapi_proxy.auth import require_api_key_if_configured
@@ -35,7 +33,7 @@ async def image_generations(body: ImageGenerationRequest):
             response_format=body.response_format,
             reference_images=refs or None,
         )
-    except asyncio.TimeoutError:
+    except TimeoutError:
         from gemini_webapi_proxy.routes._errors import error_json
 
         return error_json("Image generation timed out", 504)

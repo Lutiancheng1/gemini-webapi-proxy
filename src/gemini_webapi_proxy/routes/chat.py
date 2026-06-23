@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
-
 from fastapi import APIRouter, Depends, HTTPException
 
 from gemini_webapi_proxy.auth import require_api_key_if_configured
@@ -28,7 +26,7 @@ async def chat_completions(body: ChatCompletionRequest):
     settings = get_settings()
     try:
         return await create_chat_completion(settings, model=body.model, messages=body.messages)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         from gemini_webapi_proxy.routes._errors import error_json
 
         return error_json("Request timed out", 504)
