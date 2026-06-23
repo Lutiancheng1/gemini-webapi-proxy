@@ -4,6 +4,7 @@
 Uses the stable gemini-2.5-flash-image alias. Writes the decoded PNG
 to out.png next to this script.
 """
+
 import base64
 import os
 import pathlib

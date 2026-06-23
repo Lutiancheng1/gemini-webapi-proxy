@@ -8,6 +8,7 @@ Saves the result as out.png.
 Drop a reference PNG (e.g. a photo of a person, place, or style) next
 to this script as `ref.png` before running.
 """
+
 import base64
 import os
 import pathlib
@@ -17,14 +18,9 @@ from openai import OpenAI
 
 ref_path = pathlib.Path(__file__).parent / "ref.png"
 if not ref_path.exists():
-    sys.exit(
-        f"missing {ref_path}; drop a reference PNG next to this script and rerun"
-    )
+    sys.exit(f"missing {ref_path}; drop a reference PNG next to this script and rerun")
 
-ref_data_url = (
-    "data:image/png;base64,"
-    + base64.b64encode(ref_path.read_bytes()).decode()
-)
+ref_data_url = "data:image/png;base64," + base64.b64encode(ref_path.read_bytes()).decode()
 
 client = OpenAI(
     base_url=os.getenv("GOP_BASE_URL", "http://localhost:4982/openai/v1"),

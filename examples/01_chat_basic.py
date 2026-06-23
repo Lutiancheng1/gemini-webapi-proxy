@@ -5,6 +5,7 @@ Sends a single user message to gemini-3-flash and prints the reply.
 Defaults to a local proxy; override GOP_BASE_URL / GOP_API_KEY for
 remote deployments.
 """
+
 import os
 import sys
 
