@@ -10,6 +10,7 @@ can authenticate without touching the browser.
 Usage:
     python scripts/sync_runtime_env.py [--browser safari] [--out data/runtime.env]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -27,15 +28,14 @@ if SRC.is_dir() and str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 # Touch the package to trigger cookie-source registration.
-from gemini_webapi_proxy import cookies as _cookies  # noqa: F401
-from gemini_webapi_proxy.cookies import SOURCES, build_source
-from gemini_webapi_proxy.config import get_settings
+from gemini_webapi_proxy import cookies as _cookies  # noqa: E402,F401
+from gemini_webapi_proxy.cookies import SOURCES, build_source  # noqa: E402
 
 
 def _escape_env(value: str) -> str:
     if not value:
         return '""'
-    if any(ch in value for ch in ' \t#"\''):
+    if any(ch in value for ch in " \t#\"'"):
         escaped = value.replace("\\", "\\\\").replace('"', '\\"')
         return f'"{escaped}"'
     return value
@@ -71,7 +71,7 @@ def main() -> int:
 
     try:
         psid, psidts, extras = asyncio.run(_read_from_browser(args.browser))
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         print(f"Failed to read browser cookies: {exc}", file=sys.stderr)
         return 1
 
