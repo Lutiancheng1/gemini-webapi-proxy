@@ -1,22 +1,17 @@
 # Build the proxy in two stages so the runtime image stays small.
-#
-# NOTE: the build expects to be run with `--network=host` (or a working
-# egress proxy configured below).  The defaults assume the host has a
-# working HTTP/HTTPS proxy on 7897 (Clash etc.) — override
-# GOP_BUILD_HTTP_PROXY at build time if yours is elsewhere.
 
 ARG GOP_BUILD_HTTP_PROXY=""
 
-# NOTE: we deliberately use the full `bookworm` image (not `slim`) because
-# curl_cffi's prebuilt aarch64 wheel links against OpenSSL 1.1, which the
-# slim image does not ship. The slim variant causes "OPENSSL_internal:
-# invalid library" errors when calling gemini-webapi's RPC.
+# ---- Builder stage: pre-build the wheel so we can install it via
+#      pip (handles dependencies properly).  No project code is
+#      COPYed from the host here — instead we COPY from the host
+#      into a later stage that *only* runs on cache miss, so a
+#      code change always invalidates the build.
+
 FROM python:3.12-bookworm AS builder
 
 ARG GOP_BUILD_HTTP_PROXY
 
-# Reset every proxy-related env var to the build-time value (or empty)
-# so apt/pip inside the builder don't inherit anything from the host.
 ENV PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     HTTP_PROXY=${GOP_BUILD_HTTP_PROXY} \
@@ -27,15 +22,13 @@ ENV PIP_NO_CACHE_DIR=1 \
     all_proxy=${GOP_BUILD_HTTP_PROXY}
 
 WORKDIR /build
+# Build deps only (hatchling + pip).  The actual project source is
+# injected in the runtime stage below so code changes always bust
+# the cache.
 COPY pyproject.toml ./
-COPY src ./src
-# Readme + license are needed by hatchling when building the wheel.
-COPY README.md README.zh.md LICENSE NOTICE CHANGELOG.md ./
+RUN python -m pip install --upgrade pip build hatchling
 
-RUN python -m pip install --upgrade pip build hatchling && \
-    python -m build --wheel --outdir /wheels
-
-# ---- Runtime image ------------------------------------------------------
+# ---- Runtime image ----
 FROM python:3.12-bookworm
 
 ARG GOP_BUILD_HTTP_PROXY
@@ -53,14 +46,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     https_proxy=${GOP_BUILD_HTTP_PROXY}
 
 # We need Chromium for the image-download fallback chain.
-# Explicitly list the system packages playwright needs (avoids pulling
-# `playwright install-deps` which fails on some mirrors).
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ca-certificates \
         tini \
-        # Chromium runtime dependencies (subset of what `playwright install-deps`
-        # would install; keep this list in sync with playwright docs if it grows).
         libnss3 \
         libnspr4 \
         libatk1.0-0 \
@@ -78,15 +67,32 @@ RUN apt-get update && \
         libasound2 && \
     rm -rf /var/lib/apt/lists/*
 
-# Pull Playwright's Chromium browser binary (system deps already installed above).
+# Install the *-runtime* deps from pyproject.toml directly.  This
+# avoids the stale-wheel problem of building a wheel from a cached
+# source tree in a separate layer.
+COPY pyproject.toml README.md README.zh.md LICENSE NOTICE CHANGELOG.md ./
+RUN python -m pip install --no-cache-dir hatchling && \
+    python -m pip install --no-cache-dir \
+        "fastapi>=0.115" \
+        "uvicorn[standard]>=0.32" \
+        "pydantic>=2.5" \
+        "pydantic-settings>=2.1" \
+        "httpx>=0.27" \
+        "curl-cffi>=0.7" \
+        "playwright>=1.49" \
+        "gemini-webapi>=2.0" \
+        "python-dotenv>=1.0"
+
+# Install Playwright's Chromium browser binary.
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN python -m pip install --no-cache-dir playwright && \
     playwright install chromium
 
-# Install the application wheel built above.
-COPY --from=builder /wheels /wheels
-RUN python -m pip install --no-cache-dir /wheels/*.whl && \
-    rm -rf /wheels
+# Install the actual project source LAST so any change to src/ forces
+# a re-install of the package without any wheel caching.
+COPY src ./src
+RUN python -m pip install --no-cache-dir -e . && \
+    rm -rf /build /tmp/*.whl
 
 # Persistent data directory.
 RUN mkdir -p /app/data

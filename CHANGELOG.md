@@ -47,6 +47,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `scripts/docker-up.sh` now sets `GOP_BUILD_HTTP_PROXY` for the
   `docker build` step automatically
 
+### Fixed
+- `ModelRegistry.resolve_id()` no longer back-matches stable image
+  aliases (e.g. `gemini-2.5-pro-image.aliases = ['gemini-3-pro']`).
+  Without this guard, asking for `gemini-3-pro` could route to
+  `gemini-2.5-pro-image` whenever the underlying model was missing
+  from `_runtime` (e.g. transient `UNAUTHENTICATED` from Gemini),
+  surfacing the misleading upstream error
+  `Unknown model name: gemini-2.5-pro-image` against a request for
+  the chat-only `gemini-3-pro` model.
+- Dockerfile: stop building a pre-baked wheel in the builder stage and
+  instead `pip install -e .` the live source tree in the runtime stage.
+  The wheel path was copying `src` into a separate layer that could
+  be served from cache even when the host source had changed, leading
+  to stale code inside the image.
+
 ### Removed
 - Hard-coded path to `gemini-web-to-api/.env`
 - Hard-coded Safari-first browser order on non-macOS platforms
@@ -72,6 +87,22 @@ container, using Safari cookies for the signed-in Gemini session:
 Sample prompts: "a simple red apple on white background" (venv), "a
 tiny orange hexagon on white background" (Docker). Both returned real
 PNG bytes (magic verified) within ~40s.
+
+### Verified end-to-end (2026-06-23)
+
+The curated 2-chat + 2-image model list (above) was re-verified through
+both the Docker container and a local venv after the registry +
+Dockerfile fixes:
+
+| Path             | `gemini-3-flash` chat | `gemini-3-pro` chat | `gemini-2.5-flash-image` | `gemini-2.5-pro-image` |
+|------------------|-----------------------|---------------------|--------------------------|-------------------------|
+| Docker container | ✅                    | ✅                  | ✅ 5.5 MB apple          | ✅ 7.0 MB lemons         |
+| venv (`-m`)      | ✅                    | ✅                  | ✅ 7.5 MB orange         | ✅ 8.2 MB succulent      |
+
+All four images were real PNG bytes (magic verified, sample output
+saved to `/tmp/gop-test/`). The image-prompts that previously
+returned `Unknown model name: gemini-2.5-pro-image` now resolve
+correctly to the underlying `gemini-3-pro` runtime entry.
 
 ## [0.0.1] — 2025-06-18
 

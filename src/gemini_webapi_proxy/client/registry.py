@@ -166,7 +166,16 @@ class ModelRegistry:
         self._alias_index.clear()
         for entry in self._entries.values():
             self._alias_index[_slug(entry.id)] = entry.id
+            # Only the legacy auto-generated aliases go into the
+            # reverse index.  Stable image aliases (gemini-2.5-*-image)
+            # record their underlying target in .aliases[] purely
+            # as documentation for resolve_runtime(); indexing them
+            # backwards would make resolve_id('gemini-3-pro') return
+            # 'gemini-2.5-pro-image' — the opposite of what the
+            # caller asked for.
             for alias in entry.aliases:
+                if entry.id in self._IMAGE_ALIAS_IDS:
+                    continue
                 self._alias_index[_slug(alias)] = entry.id
 
     # ---- Stable image-model aliases ----------------------------------------
@@ -254,6 +263,14 @@ class ModelRegistry:
         if slug in self._alias_index:
             return self._alias_index[slug]
         for entry in self._entries.values():
+            # Skip stable image aliases here too — they expose
+            # .aliases = [target_id] purely for forward-resolution
+            # (gemini-2.5-pro-image -> gemini-3-pro).  Reverse-matching
+            # would make resolve_id('gemini-3-pro') return
+            # 'gemini-2.5-pro-image', which is the opposite of what
+            # the caller asked for.
+            if entry.id in self._IMAGE_ALIAS_IDS:
+                continue
             if model_id in entry.aliases or slug in {_slug(a) for a in entry.aliases}:
                 return entry.id
             if model_id.lower() in entry.id.lower() or entry.id.lower() in model_id.lower():

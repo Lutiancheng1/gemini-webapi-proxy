@@ -132,6 +132,52 @@ def test_registry_list_openai_no_auto_aliases() -> None:
     assert forbidden.isdisjoint(items), f"auto-generated aliases leaked: {forbidden & items}"
 
 
+def test_resolve_id_real_model_not_swallowed_by_image_alias() -> None:
+    """Regression: gemini-2.5-pro-image.aliases=['gemini-3-pro'] used to
+    make resolve_id('gemini-3-pro') return 'gemini-2.5-pro-image'
+    because the reverse alias index over-matched.  Image-alias
+    targets must not become reverse-indexed.
+    """
+    r = ModelRegistry()
+    r.sync_from_client([_mk("gemini-3-pro", "Pro", "advanced")])
+    # sync_from_client now seeds the image aliases, so we have
+    # 'gemini-2.5-pro-image' -> ['gemini-3-pro'] in entries.
+    assert r.resolve_id("gemini-3-pro") == "gemini-3-pro"
+
+    # And resolve_runtime('gemini-2.5-pro-image') still finds the
+    # underlying gemini-3-pro runtime entry.
+    runtime = r.resolve_runtime("gemini-2.5-pro-image")
+    # The returned object should be the gemini-3-pro AvailableModel
+    # (or its name string), not 'gemini-2.5-pro-image'.
+    name = getattr(runtime, "model_name", runtime)
+    assert name == "gemini-3-pro"
+
+
+def test_resolve_id_real_model_not_swallowed_when_runtime_missing() -> None:
+    """Regression: the real Gemini backend may not list a model in
+    `_runtime` (e.g. UNAUTHENTICATED).  In that case the
+    fast-path `if model_id in self._entries` is False, and
+    `resolve_id` falls through to a loop that matches against
+    `entry.aliases`.  The image aliases expose their target id
+    (gemini-3-pro) in `.aliases` — if that loop doesn't skip
+    image-alias entries, resolve_id('gemini-3-pro') would
+    incorrectly return 'gemini-2.5-pro-image'.
+    """
+    r = ModelRegistry()
+    # Only sync flash; gemini-3-pro is missing from _runtime but
+    # _ensure_image_aliases still creates a 'gemini-2.5-pro-image'
+    # entry with aliases=['gemini-3-pro'].
+    r.sync_from_client([_mk("gemini-3-flash", "Flash", "fast")])
+
+    # Direct hit on the missing model's id must NOT route via the
+    # image alias.
+    assert r.resolve_id("gemini-3-pro") == "gemini-3-pro"
+
+    # Forward resolution (image-alias -> target) still works.
+    assert r.resolve_id("gemini-2.5-pro-image") == "gemini-2.5-pro-image"
+    assert r.resolve_id("gemini-2.5-flash-image") == "gemini-2.5-flash-image"
+
+
 def test_image_capable_default_overrides() -> None:
     """gemini-3-flash and gemini-3-pro should be marked image-capable
     by default, even when probe results say image_ok=False."""
