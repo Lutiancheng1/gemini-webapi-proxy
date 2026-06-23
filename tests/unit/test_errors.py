@@ -55,6 +55,10 @@ def test_cookie_expired_file_message() -> None:
         # classic "image creation isn't available" phrasing.
         "Normally I can help with things like this, but I don't seem to have access to that content.",
         "I'm not able to create that image right now.",
+        # Soft refusals seen on 2026-06-23 against accounts where image
+        # generation is silently blocked but chat still works.
+        "I'm having a hard time fulfilling your request. Can I help you with something else instead?",
+        "I'm having trouble fulfilling this. Can I help you with something else instead?",
     ],
 )
 def test_image_refusal_detection(text: str) -> None:

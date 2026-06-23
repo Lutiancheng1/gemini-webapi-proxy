@@ -60,9 +60,9 @@ def test_registry_pick_image_falls_back_to_kind() -> None:
     r = ModelRegistry()
     r.sync_from_client([_mk("gemini-3-flash", "fast", "chat")])
     r.update_probe("gemini-3-flash", chat_ok=True)
-    # No image model probed; should still return a usable id
+    # No image model probed; the stable alias should be preferred.
     picked = r.pick_image_model()
-    assert picked == "gemini-3-flash"
+    assert picked == "gemini-2.5-flash-image"
 
 
 def test_registry_list_openai_includes_aliases() -> None:
@@ -73,6 +73,136 @@ def test_registry_list_openai_includes_aliases() -> None:
     assert "gemini-3-pro" in ids
     # The alias was added by sync_from_client
     assert any(i.startswith("gemini-3-pro") for i in ids)
+
+
+def test_image_capable_default_overrides() -> None:
+    """gemini-3-flash and gemini-3-pro should be marked image-capable
+    by default, even when probe results say image_ok=False."""
+
+    r = ModelRegistry()
+    r.sync_from_client(
+        [
+            _mk("gemini-3-flash", "Flash", "fast"),
+            _mk("gemini-3-pro", "Pro", "advanced"),
+        ]
+    )
+    items = {
+        item["id"]: item
+        for item in r.list_openai_models(image_overrides={"gemini-3-flash", "gemini-3-pro"})
+    }
+    assert items["gemini-3-flash"]["capabilities"]["image"] is True
+    assert items["gemini-3-pro"]["capabilities"]["image"] is True
+
+
+def test_image_capable_name_hints() -> None:
+    """Static name hints (image / imagen / nano-banana) work without
+    an explicit override."""
+    from gemini_webapi_proxy.client.registry import is_image_capable_name
+
+    # Override set is empty
+    assert is_image_capable_name("gemini-2.0-flash-image", image_overrides=set()) is True
+    assert is_image_capable_name("imagen-3.0", image_overrides=set()) is True
+    assert is_image_capable_name("gemini-nano-banana", image_overrides=set()) is True
+    # Non-image model
+    assert is_image_capable_name("gemini-3-pro", image_overrides=set()) is False
+    assert is_image_capable_name("gemini-3-flash", image_overrides=set()) is False
+
+
+def test_image_capable_explicit_override() -> None:
+    """Explicit override set is honored even if name hints don't match."""
+    from gemini_webapi_proxy.client.registry import is_image_capable_name
+
+    assert is_image_capable_name("my-custom-model", image_overrides={"my-custom-model"}) is True
+    assert is_image_capable_name("gemini-3-pro", image_overrides={"gemini-3-pro"}) is True
+    # Different id with the same override set
+    assert is_image_capable_name("gemini-3-flash", image_overrides={"gemini-3-pro"}) is False
+
+
+def test_list_openai_no_override_no_image_flag() -> None:
+    """When no override is given and probe didn't mark image_ok,
+    capabilities.image should be False for non-hint names."""
+    r = ModelRegistry()
+    r.sync_from_client([_mk("gemini-3-pro", "Pro", "high")])
+    items = r.list_openai_models()  # no image_overrides
+    item = next(i for i in items if i["id"] == "gemini-3-pro")
+    assert item["capabilities"]["image"] is False
+
+
+def test_image_aliases_present_after_sync() -> None:
+    """The two stable image aliases should be in /models even if gemini-webapi
+    doesn't return them — they are published by the proxy itself."""
+    r = ModelRegistry()
+    r.sync_from_client(
+        [
+            _mk("gemini-3-flash", "Flash", "fast"),
+            _mk("gemini-3-pro", "Pro", "advanced"),
+        ]
+    )
+    items = {i["id"]: i for i in r.list_openai_models()}
+    assert "gemini-2.5-flash-image" in items
+    assert "gemini-2.5-pro-image" in items
+    # Both should be marked image-capable
+    assert items["gemini-2.5-flash-image"]["capabilities"]["image"] is True
+    assert items["gemini-2.5-pro-image"]["capabilities"]["image"] is True
+    # And they should NOT be chat-capable (they are image-only)
+    assert items["gemini-2.5-flash-image"]["capabilities"]["chat"] is False
+    assert items["gemini-2.5-pro-image"]["capabilities"]["chat"] is False
+
+
+def test_image_aliases_present_even_when_underlying_unavailable() -> None:
+    """If gemini-webapi returns no pro model, the image alias should still
+    be visible so the client has something to pick."""
+    r = ModelRegistry()
+    r.sync_from_client([_mk("gemini-3-flash", "Flash", "fast")])
+    # No gemini-3-pro in the runtime list
+    items = {i["id"]: i for i in r.list_openai_models()}
+    assert "gemini-2.5-pro-image" in items
+    assert items["gemini-2.5-pro-image"]["capabilities"]["image"] is True
+
+
+def test_image_aliases_resolve_to_underlying() -> None:
+    """resolve_id('gemini-2.5-flash-image') returns the alias itself;
+    the underlying target (gemini-3-flash) is exposed via aliases[].
+    Callers that need to expand to the real backend should walk
+    entry.aliases."""
+    r = ModelRegistry()
+    r.sync_from_client([_mk("gemini-3-flash", "Flash", "fast")])
+    assert r.resolve_id("gemini-2.5-flash-image") == "gemini-2.5-flash-image"
+    # The underlying target is in the alias entry
+    entry = r._entries["gemini-2.5-flash-image"]
+    assert "gemini-3-flash" in entry.aliases
+
+
+def test_image_aliases_present_after_load_file(tmp_path) -> None:
+    """load_file() also seeds the image aliases, even if the on-disk
+    registry has only the raw gemini-webapi models."""
+    import json
+
+    reg_file = tmp_path / "reg.json"
+    reg_file.write_text(
+        json.dumps(
+            {
+                "updated_at": 0,
+                "models": [
+                    {
+                        "id": "gemini-3-flash",
+                        "display_name": "Flash",
+                        "description": "",
+                        "kind": "both",
+                        "chat_ok": True,
+                        "image_ok": True,
+                        "probed_at": 0,
+                        "aliases": [],
+                    },
+                ],
+            }
+        )
+    )
+    r = ModelRegistry()
+    r.load_file(reg_file)
+    items = {i["id"]: i for i in r.list_openai_models()}
+    assert "gemini-2.5-flash-image" in items
+    assert "gemini-2.5-pro-image" in items
 
 
 def _mk(name: str, display: str, desc: str) -> ModelDescriptor:

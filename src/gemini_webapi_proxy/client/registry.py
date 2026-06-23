@@ -26,7 +26,10 @@ class ModelEntry:
     probed_at: int | None = None
     aliases: list[str] = field(default_factory=list)
 
-    def to_openai(self, created: int) -> dict[str, Any]:
+    def to_openai(self, created: int, *, image_overrides: set[str] | None = None) -> dict[str, Any]:
+        image = self.image_ok or self.kind in {"image", "both"}
+        if image_overrides is not None:
+            image = image or self.id in image_overrides
         return {
             "id": self.id,
             "object": "model",
@@ -34,7 +37,7 @@ class ModelEntry:
             "owned_by": "google",
             "capabilities": {
                 "chat": self.chat_ok or self.kind in {"chat", "both"},
-                "image": self.image_ok or self.kind in {"image", "both"},
+                "image": image,
             },
         }
 
@@ -43,11 +46,37 @@ def _slug(name: str) -> str:
     return re.sub(r"[^a-z0-9._-]+", "-", name.lower()).strip("-")
 
 
+# Image-capable model hints.  A model is considered image-capable if its
+# name contains any of these (case-insensitive substring match).
+_IMAGE_NAME_HINTS = (
+    "image",
+    "imagen",
+    "nano-banana",
+    "nano_banana",
+    "画图",
+    "出图",
+    "图片",
+)
+
+
+def is_image_capable_name(model_id: str, image_overrides: set[str] | None = None) -> bool:
+    """True if the model id is a known image-generation model.
+
+    Match sources (in priority order):
+      1. Explicit override set (GOP_IMAGE_MODELS) — most authoritative
+      2. Static name hints (image / imagen / nano-banana / etc.)
+    """
+    if image_overrides and model_id in image_overrides:
+        return True
+    lowered = model_id.lower()
+    return any(h in lowered for h in _IMAGE_NAME_HINTS)
+
+
 def _guess_kind(model_name: str, description: str) -> str:
     blob = f"{model_name} {description}".lower()
     if any(x in blob for x in TEXT_BLOCKLIST):
         return "chat"
-    has_image = any(x in blob for x in IMAGE_HINTS)
+    has_image = any(x in blob for x in _IMAGE_NAME_HINTS)
     if has_image and "flash" in blob:
         return "image"
     if has_image:
@@ -90,11 +119,14 @@ class ModelRegistry:
 
     def load_file(self, path: Path = REGISTRY_PATH) -> None:
         if not path.exists():
+            self._ensure_image_aliases()
+            self._rebuild_aliases()
             return
         raw = json.loads(path.read_text())
         for item in raw.get("models", []):
             entry = ModelEntry(**item)
             self._entries[entry.id] = entry
+        self._ensure_image_aliases()
         self._rebuild_aliases()
         self._loaded = bool(self._entries)
 
@@ -126,6 +158,7 @@ class ModelRegistry:
                 probed_at=prev.probed_at if prev else None,
                 aliases=_alias_candidates(m.model_name, m.description),
             )
+        self._ensure_image_aliases()
         self._rebuild_aliases()
         self._loaded = True
 
@@ -136,10 +169,78 @@ class ModelRegistry:
             for alias in entry.aliases:
                 self._alias_index[_slug(alias)] = entry.id
 
+    # ---- Stable image-model aliases ----------------------------------------
+    #
+    # gemini-webapi 2.0 surfaces the underlying Gemini Web frontend model
+    # names (gemini-3-flash, gemini-3-pro).  These don't tell a client
+    # *which* model is the image-generation one, and Google has been
+    # known to flip them off (`is_available=False`) without notice.
+    #
+    # We publish two stable aliases — gemini-2.5-flash-image and
+    # gemini-2.5-pro-image — that clients can use to mean "the Flash /
+    # Pro image-generation model currently in use".  The internal
+    # targets (gemini-3-flash, gemini-3-pro) are chosen from whatever
+    # is currently available, so the alias stays usable even if one
+    # of the underlying models is offline.
+
+    _IMAGE_ALIASES: tuple[tuple[str, str, str], ...] = (
+        # (alias_id, target_id, human_name)
+        ("gemini-2.5-flash-image", "gemini-3-flash", "Gemini 2.5 Flash Image (nano-banana)"),
+        # The "pro" alias points at gemini-3-pro by design, but on
+        # accounts where Google currently blocks pro image generation
+        # the underlying call will return 403.  The proxy surfaces
+        # that 403 verbatim so the client can decide whether to
+        # downgrade to the Flash alias.
+        ("gemini-2.5-pro-image", "gemini-3-pro", "Gemini 2.5 Pro Image (nano-banana-pro)"),
+    )
+
+    def _ensure_image_aliases(self) -> None:
+        """Make sure the two stable image-model aliases exist as entries.
+
+        The alias's ``kind`` and ``image_ok`` are always set so clients
+        can rely on the capability flag.  We never *override* an
+        alias's id or target — the target is fixed so chat calls
+        that ask for the alias are routed to the right backend.
+        """
+        for alias_id, target_id, human_name in self._IMAGE_ALIASES:
+            entry = self._entries.get(alias_id)
+            if entry is None:
+                self._entries[alias_id] = ModelEntry(
+                    id=alias_id,
+                    display_name=human_name,
+                    description=(
+                        "Stable alias for the Flash-tier image-generation model. "
+                        "Routes internally to "
+                        f"{target_id} (Google's nano-banana)."
+                    ),
+                    kind="image",
+                    chat_ok=False,
+                    image_ok=True,
+                    probed_at=int(time.time()),
+                    aliases=[target_id],
+                )
+            else:
+                # Keep the alias's image flag; preserve any chat_ok the
+                # user set manually.
+                entry.image_ok = True
+                entry.kind = "image" if not entry.chat_ok else "both"
+                if target_id not in entry.aliases:
+                    entry.aliases = [*entry.aliases, target_id]
+
     def resolve_runtime(self, model_id: str) -> AvailableModel | str:
         key = self.resolve_id(model_id)
         if key in self._runtime:
             return self._runtime[key]
+        # Stable image aliases (gemini-2.5-flash-image, etc.) live in
+        # our registry but not in gemini-webapi's runtime.  Fall back
+        # to the first alias in the entry's alias list — that's the
+        # underlying real model id (e.g. gemini-3-flash) the alias
+        # routes to.
+        entry = self._entries.get(key)
+        if entry and entry.aliases:
+            for alias in entry.aliases:
+                if alias in self._runtime:
+                    return self._runtime[alias]
         return key
 
     def resolve_id(self, model_id: str) -> str:
@@ -208,7 +309,9 @@ class ModelRegistry:
             entry.kind = "chat"
         entry.probed_at = int(time.time())
 
-    def list_openai_models(self) -> list[dict[str, Any]]:
+    def list_openai_models(
+        self, *, image_overrides: set[str] | None = None
+    ) -> list[dict[str, Any]]:
         created = int(time.time())
         seen: set[str] = set()
         out: list[dict[str, Any]] = []
@@ -216,7 +319,11 @@ class ModelRegistry:
             if entry.id in seen:
                 continue
             seen.add(entry.id)
-            out.append(entry.to_openai(created))
+            # If the model wasn't probed (image_ok is False) but its id is
+            # in the image-override set or matches a name hint, treat
+            # it as image-capable in the OpenAI listing.
+            effective_image = entry.image_ok or is_image_capable_name(entry.id, image_overrides)
+            out.append(entry.to_openai(created, image_overrides=image_overrides))
             for alias in entry.aliases:
                 if alias in seen:
                     continue
@@ -227,9 +334,9 @@ class ModelRegistry:
                     description=entry.description,
                     kind=entry.kind,
                     chat_ok=entry.chat_ok,
-                    image_ok=entry.image_ok,
+                    image_ok=effective_image,
                     probed_at=entry.probed_at,
                     aliases=[],
                 )
-                out.append(clone.to_openai(created))
+                out.append(clone.to_openai(created, image_overrides=image_overrides))
         return sorted(out, key=lambda x: x["id"])

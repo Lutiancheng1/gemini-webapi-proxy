@@ -48,6 +48,12 @@ _IMAGE_REFUSAL_PHRASES = (
     "not able to generate",
     "an error occurred while generating",
     "try again in a moment",
+    # Soft refusals seen on 2026-06-23 against accounts where image
+    # generation is blocked but chat works.
+    "having a hard time fulfilling",
+    "having trouble fulfilling",
+    "can i help you with something else",
+    "help you with something else instead",
 )
 
 # Short refusals emitted by the chat pipeline.

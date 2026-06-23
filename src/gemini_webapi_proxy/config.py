@@ -88,6 +88,21 @@ class Settings(BaseSettings):
     data_dir: Path = DEFAULT_DATA_DIR
     registry_file: str = DEFAULT_REGISTRY_FILE
 
+    # -- Image-capable model overrides -------------------------------------
+    # When /openai/v1/models is queried, each model is annotated with
+    # an `image: true|false` capability.  We derive that from:
+    #   1. The static heuristics in registry._guess_kind (model name
+    #      contains "image" / "imagen" / "nano-banana")
+    #   2. Any extra model IDs listed here (comma-separated env var)
+    # Defaults to the two Gemini Web models known to support image
+    # generation in 2026-Q2: gemini-3-flash and gemini-3-pro.
+    image_model_overrides: list[str] = Field(
+        default_factory=lambda: [
+            "gemini-3-flash",
+            "gemini-3-pro",
+        ]
+    )
+
     # -- Downloader chain -------------------------------------------------
     downloader_chain: list[str] = Field(
         default_factory=lambda: [

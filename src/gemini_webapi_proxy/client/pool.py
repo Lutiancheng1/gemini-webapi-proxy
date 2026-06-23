@@ -84,5 +84,15 @@ async def invalidate_client() -> None:
 @asynccontextmanager
 async def lifespan(app):  # type: ignore[no-untyped-def]
     registry.load_file()
+    # Eagerly init the Gemini client during startup so the model
+    # registry is populated before the first /openai/v1/models
+    # request. Without this, the models endpoint returns an empty
+    # list until a chat/image call forces lazy init.
+    try:
+        await get_client()
+    except Exception:
+        # Cookie not yet configured, or Gemini is down.  The first
+        # real request will retry; we don't want startup to fail.
+        pass
     yield
     await close_client()
