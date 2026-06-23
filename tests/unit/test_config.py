@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`gemini_openai_proxy.config`."""
+"""Unit tests for :mod:`gemini_webapi_proxy.config`."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from gemini_openai_proxy.config import (
+from gemini_webapi_proxy.config import (
     REGISTRY_PATH,
     Settings,
     get_settings,

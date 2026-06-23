@@ -30,7 +30,7 @@ def _isolated_settings(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     # Keep httpx quiet in tests.
     monkeypatch.setenv("GOP_LOG_LEVEL", "WARNING")
     # Reset module-level cache.
-    from gemini_openai_proxy.config import reset_settings_cache
+    from gemini_webapi_proxy.config import reset_settings_cache
 
     reset_settings_cache()
     yield

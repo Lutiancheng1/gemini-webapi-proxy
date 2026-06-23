@@ -1,14 +1,14 @@
 <div align="center">
 
-# 🌐 Gemini OpenAI Proxy
+# 🌐 Gemini WebAPI Proxy
 
 **OpenAI-compatible API gateway for Google Gemini Web — drop-in `base_url` replacement for any OpenAI client.**
 
-[![PyPI](https://img.shields.io/pypi/v/gemini-openai-proxy.svg)](https://pypi.org/project/gemini-openai-proxy/)
-[![CI](https://img.shields.io/github/actions/workflow/status/Lutiancheng1/gemini-openai-proxy/ci.yml?branch=main)](https://github.com/Lutiancheng1/gemini-openai-proxy/actions)
+[![PyPI](https://img.shields.io/pypi/v/gemini-webapi-proxy.svg)](https://pypi.org/project/gemini-webapi-proxy/)
+[![CI](https://img.shields.io/github/actions/workflow/status/Lutiancheng1/gemini-webapi-proxy/ci.yml?branch=main)](https://github.com/Lutiancheng1/gemini-webapi-proxy/actions)
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/pypi/pyversions/gemini-openai-proxy.svg)](https://pypi.org/project/gemini-openai-proxy/)
-[![Docker](https://img.shields.io/badge/docker-ghcr.io%2Flutiancheng1%2Fgemini--openai--proxy-blue)](https://ghcr.io/Lutiancheng1/gemini-openai-proxy)
+[![Python](https://img.shields.io/pypi/pyversions/gemini-webapi-proxy.svg)](https://pypi.org/project/gemini-webapi-proxy/)
+[![Docker](https://img.shields.io/badge/docker-ghcr.io%2Flutiancheng1%2Fgemini--openai--proxy-blue)](https://ghcr.io/Lutiancheng1/gemini-webapi-proxy)
 
 [English](README.md) · [中文](README.zh.md)
 
@@ -37,15 +37,15 @@
 ### Option A: `pip` (PyPI)
 
 ```bash
-pip install "gemini-openai-proxy[browser-cookie]"
-gemini-openai-proxy
+pip install "gemini-webapi-proxy[browser-cookie]"
+gemini-webapi-proxy
 ```
 
 ### Option B: From source
 
 ```bash
-git clone https://github.com/Lutiancheng1/gemini-openai-proxy
-cd gemini-openai-proxy
+git clone https://github.com/Lutiancheng1/gemini-webapi-proxy
+cd gemini-webapi-proxy
 python3 -m venv .venv
 .venv/bin/pip install -e ".[browser-cookie,dev]"
 .venv/bin/playwright install chromium
@@ -55,8 +55,8 @@ python3 -m venv .venv
 ### Option C: Docker
 
 ```bash
-git clone https://github.com/Lutiancheng1/gemini-openai-proxy
-cd gemini-openai-proxy
+git clone https://github.com/Lutiancheng1/gemini-webapi-proxy
+cd gemini-webapi-proxy
 bash scripts/docker-up.sh
 ```
 
@@ -68,7 +68,7 @@ In all three cases, verify the service:
 
 ```bash
 curl -sS http://localhost:4982/health
-# {"status":"ok","service":"gemini-openai-proxy"}
+# {"status":"ok","service":"gemini-webapi-proxy"}
 ```
 
 ## 🔌 Wiring a client
@@ -155,11 +155,11 @@ detailed semantics.
 └─────────────────────────────────────────────────┘
 ```
 
-- **Pluggable cookie sources** (`gemini_openai_proxy.cookies`) — add a new
+- **Pluggable cookie sources** (`gemini_webapi_proxy.cookies`) — add a new
   one by subclassing `BaseCookieSource` and registering it.
-- **Pluggable image downloaders** (`gemini_openai_proxy.downloaders`) —
+- **Pluggable image downloaders** (`gemini_webapi_proxy.downloaders`) —
   each strategy is a small class; reorder the chain in `GOP_DOWNLOADER_CHAIN`.
-- **Pluggable Gemini client** (`gemini_openai_proxy.client`) — current
+- **Pluggable Gemini client** (`gemini_webapi_proxy.client`) — current
   implementation wraps `gemini-webapi`; future backends can implement
   `BaseGeminiClient` without touching the rest of the code.
 
@@ -175,8 +175,8 @@ detailed semantics.
 ## 🧪 Development
 
 ```bash
-git clone https://github.com/Lutiancheng1/gemini-openai-proxy
-cd gemini-openai-proxy
+git clone https://github.com/Lutiancheng1/gemini-webapi-proxy
+cd gemini-webapi-proxy
 python3 -m venv .venv
 .venv/bin/pip install -e ".[browser-cookie,dev]"
 .venv/bin/playwright install chromium

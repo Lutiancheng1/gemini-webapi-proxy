@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from gemini_openai_proxy.cookies import (
+from gemini_webapi_proxy.cookies import (
     SOURCES,
     CookieBundle,
     build_source,
@@ -21,7 +21,7 @@ def test_build_source_unknown() -> None:
 
 
 def test_env_source_requires_psid(monkeypatch: pytest.MonkeyPatch) -> None:
-    from gemini_openai_proxy.config import reset_settings_cache
+    from gemini_webapi_proxy.config import reset_settings_cache
 
     monkeypatch.setenv("GOP_COOKIE_SOURCE", "env")
     monkeypatch.delenv("GOP_GEMINI_1PSID", raising=False)
@@ -29,14 +29,14 @@ def test_env_source_requires_psid(monkeypatch: pytest.MonkeyPatch) -> None:
 
     import asyncio
 
-    from gemini_openai_proxy.cookies import build_source as bs
+    from gemini_webapi_proxy.cookies import build_source as bs
 
     with pytest.raises(RuntimeError, match="GOP_GEMINI_1PSID"):
         asyncio.run(bs("env").load())
 
 
 def test_env_source_loads(monkeypatch: pytest.MonkeyPatch) -> None:
-    from gemini_openai_proxy.config import reset_settings_cache
+    from gemini_webapi_proxy.config import reset_settings_cache
 
     monkeypatch.setenv("GOP_COOKIE_SOURCE", "env")
     monkeypatch.setenv("GOP_GEMINI_1PSID", "psid123")
@@ -45,7 +45,7 @@ def test_env_source_loads(monkeypatch: pytest.MonkeyPatch) -> None:
 
     import asyncio
 
-    from gemini_openai_proxy.cookies import build_source as bs
+    from gemini_webapi_proxy.cookies import build_source as bs
 
     bundle = asyncio.run(bs("env").load())
     assert bundle.psid == "psid123"
@@ -54,7 +54,7 @@ def test_env_source_loads(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_file_source_loads_netscape(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
-    from gemini_openai_proxy.config import reset_settings_cache
+    from gemini_webapi_proxy.config import reset_settings_cache
 
     cookie_file = tmp_path / "cookies.txt"
     cookie_file.write_text(
@@ -68,7 +68,7 @@ def test_file_source_loads_netscape(tmp_path, monkeypatch: pytest.MonkeyPatch) -
 
     import asyncio
 
-    from gemini_openai_proxy.cookies import build_source as bs
+    from gemini_webapi_proxy.cookies import build_source as bs
 
     bundle = asyncio.run(bs("file").load())
     assert bundle.psid == "abc123"
@@ -77,7 +77,7 @@ def test_file_source_loads_netscape(tmp_path, monkeypatch: pytest.MonkeyPatch) -
 
 
 def test_file_source_requires_psid(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
-    from gemini_openai_proxy.config import reset_settings_cache
+    from gemini_webapi_proxy.config import reset_settings_cache
 
     cookie_file = tmp_path / "cookies.txt"
     cookie_file.write_text(".google.com\tTRUE\t/\tTRUE\t0\tfoo\tbar\n")
@@ -86,7 +86,7 @@ def test_file_source_requires_psid(tmp_path, monkeypatch: pytest.MonkeyPatch) ->
 
     import asyncio
 
-    from gemini_openai_proxy.cookies import build_source as bs
+    from gemini_webapi_proxy.cookies import build_source as bs
 
     with pytest.raises(RuntimeError, match="__Secure-1PSID"):
         asyncio.run(bs("file").load())

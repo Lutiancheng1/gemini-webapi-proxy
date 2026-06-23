@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "gemini-openai-proxy"
+name = "gemini-webapi-proxy"
 dynamic = ["version"]
 description = "OpenAI-compatible API gateway for Google Gemini Web (powered by gemini-webapi)"
 readme = "README.md"
@@ -67,26 +67,26 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Lutiancheng1/gemini-openai-proxy"
-Documentation = "https://github.com/Lutiancheng1/gemini-openai-proxy/tree/main/docs"
-Issues = "https://github.com/Lutiancheng1/gemini-openai-proxy/issues"
-Changelog = "https://github.com/Lutiancheng1/gemini-openai-proxy/releases"
+Homepage = "https://github.com/Lutiancheng1/gemini-webapi-proxy"
+Documentation = "https://github.com/Lutiancheng1/gemini-webapi-proxy/tree/main/docs"
+Issues = "https://github.com/Lutiancheng1/gemini-webapi-proxy/issues"
+Changelog = "https://github.com/Lutiancheng1/gemini-webapi-proxy/releases"
 Funding = "https://github.com/sponsors/Lutiancheng1"
 
 [project.scripts]
-gemini-openai-proxy = "gemini_openai_proxy.__main__:main"
-gop = "gemini_openai_proxy.__main__:main"
+gemini-webapi-proxy = "gemini_webapi_proxy.__main__:main"
+gwap = "gemini_webapi_proxy.__main__:main"
 
 # ---- Hatch configuration -------------------------------------------------
 [tool.hatch.version]
-path = "src/gemini_openai_proxy/__init__.py"
+path = "src/gemini_webapi_proxy/__init__.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/gemini_openai_proxy"]
+packages = ["src/gemini_webapi_proxy"]
 
 [tool.hatch.build.targets.sdist]
 include = [
-  "src/gemini_openai_proxy",
+  "src/gemini_webapi_proxy",
   "tests",
   "docs",
   "README.md",
@@ -186,7 +186,7 @@ markers = [
 
 # ---- Coverage ------------------------------------------------------------
 [tool.coverage.run]
-source = ["src/gemini_openai_proxy"]
+source = ["src/gemini_webapi_proxy"]
 omit = ["*/tests/*", "*/__main__.py"]
 
 [tool.coverage.report]

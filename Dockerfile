@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.6
 # Build the proxy in two stages so the runtime image stays small.
 #
 # NOTE: the build expects to be run with `--network=host` (or a working
@@ -54,18 +53,35 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     https_proxy=${GOP_BUILD_HTTP_PROXY}
 
 # We need Chromium for the image-download fallback chain.
-# `--network=host` is required so apt can reach the package mirror.
+# Explicitly list the system packages playwright needs (avoids pulling
+# `playwright install-deps` which fails on some mirrors).
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ca-certificates \
-        tini && \
+        tini \
+        # Chromium runtime dependencies (subset of what `playwright install-deps`
+        # would install; keep this list in sync with playwright docs if it grows).
+        libnss3 \
+        libnspr4 \
+        libatk1.0-0 \
+        libatk-bridge2.0-0 \
+        libcups2 \
+        libdrm2 \
+        libxkbcommon0 \
+        libxcomposite1 \
+        libxdamage1 \
+        libxfixes3 \
+        libxrandr2 \
+        libgbm1 \
+        libpango-1.0-0 \
+        libcairo2 \
+        libasound2 && \
     rm -rf /var/lib/apt/lists/*
 
-# Pull Playwright's Chromium into a dedicated layer for cache friendliness.
+# Pull Playwright's Chromium browser binary (system deps already installed above).
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN python -m pip install --no-cache-dir playwright && \
-    playwright install chromium && \
-    playwright install-deps chromium
+    playwright install chromium
 
 # Install the application wheel built above.
 COPY --from=builder /wheels /wheels
@@ -83,4 +99,4 @@ HEALTHCHECK --interval=30s --timeout=8s --start-period=90s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4982/health', timeout=5)"
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["python", "-m", "gemini_openai_proxy", "--host", "0.0.0.0", "--port", "4982"]
+CMD ["python", "-m", "gemini_webapi_proxy", "--host", "0.0.0.0", "--port", "4982"]

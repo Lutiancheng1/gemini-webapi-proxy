@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from gemini_openai_proxy.client.base import ModelDescriptor
-from gemini_openai_proxy.client.registry import ModelRegistry, _guess_kind
+from gemini_webapi_proxy.client.base import ModelDescriptor
+from gemini_webapi_proxy.client.registry import ModelRegistry, _guess_kind
 
 
 def test_guess_kind_image() -> None:

@@ -1,13 +1,13 @@
 # Contributing
 
-Thanks for taking an interest in `gemini-openai-proxy`! This document
+Thanks for taking an interest in `gemini-webapi-proxy`! This document
 covers everything you need to send a useful PR.
 
 ## Development setup
 
 ```bash
-git clone https://github.com/Lutiancheng1/gemini-openai-proxy
-cd gemini-openai-proxy
+git clone https://github.com/Lutiancheng1/gemini-webapi-proxy
+cd gemini-webapi-proxy
 python3 -m venv .venv
 .venv/bin/pip install -e ".[browser-cookie,dev]"
 .venv/bin/playwright install chromium

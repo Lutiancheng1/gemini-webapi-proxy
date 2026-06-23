@@ -21,7 +21,7 @@ Pick a specific browser with `GOP_BROWSER=safari|chrome|edge|brave|chromium`.
 
 ```bash
 # macOS — first time only
-pip install "gemini-openai-proxy[browser-cookie]"
+pip install "gemini-webapi-proxy[browser-cookie]"
 .venv/bin/playwright install chromium   # only if you'll generate images
 ./start.sh
 ```
@@ -69,7 +69,7 @@ where you don't want to hand-edit env files.
 # 2. SCP / copy cookies.txt to the server
 # 3. Set:
 export GOP_COOKIE_SOURCE=file
-export GOP_COOKIE_FILE=/etc/gemini-openai-proxy/cookies.txt
+export GOP_COOKIE_FILE=/etc/gemini-webapi-proxy/cookies.txt
 ./start.sh
 ```
 

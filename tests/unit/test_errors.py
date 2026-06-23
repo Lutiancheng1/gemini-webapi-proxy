@@ -4,9 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from gemini_openai_proxy.errors import CookieExpiredError, ImageExportError
-from gemini_openai_proxy.routes._errors import _looks_like_image_refusal
-from gemini_openai_proxy.utils.upstream_refusal import looks_like_upstream_refusal
+from gemini_webapi_proxy.config import Settings, reset_settings_cache
+from gemini_webapi_proxy.errors import CookieExpiredError, ImageExportError
+from gemini_webapi_proxy.routes._errors import _looks_like_image_refusal, map_api_error
+from gemini_webapi_proxy.utils.upstream_refusal import (
+    COOKIE_REAUTH_HINT,
+    looks_like_upstream_refusal,
+)
 
 
 def test_image_export_error_default_status() -> None:
@@ -46,6 +50,11 @@ def test_cookie_expired_file_message() -> None:
         "Image generation isn't available in your location yet.",
         "Feature isn't available for your account.",
         "Something went wrong, try again later.",
+        # New variant seen 2026-06 after Safari re-login: Gemini sometimes
+        # responds with a generic "I don't have access" instead of the
+        # classic "image creation isn't available" phrasing.
+        "Normally I can help with things like this, but I don't seem to have access to that content.",
+        "I'm not able to create that image right now.",
     ],
 )
 def test_image_refusal_detection(text: str) -> None:
@@ -74,3 +83,31 @@ def test_non_refusal_text_not_detected(text: str) -> None:
 )
 def test_chat_refusal_detection(text: str) -> None:
     assert looks_like_upstream_refusal(text)
+
+
+def test_reauth_hint_present() -> None:
+    """The re-auth guidance string is non-empty and points at Safari + sync."""
+    assert "gemini.google.com" in COOKIE_REAUTH_HINT
+    assert "sync" in COOKIE_REAUTH_HINT.lower()
+
+
+def test_refusal_response_includes_reauth_hint() -> None:
+    """map_api_error must append the re-auth guidance to 403 responses."""
+    import asyncio
+
+    reset_settings_cache()
+    s = Settings()
+    resp = asyncio.run(
+        map_api_error(
+            RuntimeError(
+                "Normally I can help with things like this, but I don't seem to have access to that content."
+            ),
+            s,
+        )
+    )
+    assert resp.status_code == 403
+    import json as _json
+
+    body = _json.loads(resp.body)
+    assert "Safari" in body["error"]["message"]
+    assert "sync" in body["error"]["message"].lower()

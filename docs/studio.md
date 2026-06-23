@@ -41,7 +41,7 @@ After starting the proxy, verify the health endpoint:
 
 ```bash
 curl -sS http://localhost:4982/health
-# {"status":"ok","service":"gemini-openai-proxy"}
+# {"status":"ok","service":"gemini-webapi-proxy"}
 ```
 
 Then trigger a simple chat completion through your client to confirm

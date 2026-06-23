@@ -35,7 +35,7 @@ Paste error / response here.
 
 ## Environment
 
-- gemini-openai-proxy version (`pip show gemini-openai-proxy` or `git rev-parse HEAD`)
+- gemini-webapi-proxy version (`pip show gemini-webapi-proxy` or `git rev-parse HEAD`)
 - Python version (`python --version`)
 - OS (e.g. macOS 15.4, Ubuntu 24.04, Docker)
 - Browser used (if `GOP_COOKIE_SOURCE=browser`)

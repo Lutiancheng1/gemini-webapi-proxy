@@ -9,9 +9,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from gemini_openai_proxy.config import get_settings
-from gemini_openai_proxy.gemini_pool import close_client, get_client, registry
-from gemini_openai_proxy.services.probe import probe_all_models
+from gemini_webapi_proxy.config import get_settings
+from gemini_webapi_proxy.gemini_pool import close_client, get_client, registry
+from gemini_webapi_proxy.services.probe import probe_all_models
 
 
 async def main() -> None:

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from gemini_openai_proxy.downloaders import all_downloaders
-from gemini_openai_proxy.downloaders.image_export import (
+from gemini_webapi_proxy.downloaders import all_downloaders
+from gemini_webapi_proxy.downloaders.image_export import (
     _download_candidates,
     _is_gg_dl_url,
     _is_session_closed_error,

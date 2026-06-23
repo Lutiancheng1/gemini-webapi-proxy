@@ -31,7 +31,7 @@ bash scripts/e2e-image.sh
 ## Repository layout (after refactor)
 
 ```
-src/gemini_openai_proxy/   importable package
+src/gemini_webapi_proxy/   importable package
   app.py                   FastAPI app factory
   config.py                pydantic-settings
   cookies/                 pluggable cookie sources

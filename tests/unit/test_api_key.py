@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from fastapi import HTTPException
 
-from gemini_openai_proxy.auth import require_api_key_if_configured
+from gemini_webapi_proxy.auth import require_api_key_if_configured
 
 
 def _request(headers: dict[str, str] | None = None):
@@ -19,7 +19,7 @@ def _request(headers: dict[str, str] | None = None):
 
 
 def test_no_key_configured_passes(monkeypatch: pytest.MonkeyPatch) -> None:
-    from gemini_openai_proxy.config import reset_settings_cache
+    from gemini_webapi_proxy.config import reset_settings_cache
 
     monkeypatch.delenv("GOP_API_KEY", raising=False)
     reset_settings_cache()
@@ -28,7 +28,7 @@ def test_no_key_configured_passes(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_missing_authorization_header_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
-    from gemini_openai_proxy.config import reset_settings_cache
+    from gemini_webapi_proxy.config import reset_settings_cache
 
     monkeypatch.setenv("GOP_API_KEY", "secret")
     reset_settings_cache()
@@ -38,7 +38,7 @@ def test_missing_authorization_header_rejected(monkeypatch: pytest.MonkeyPatch) 
 
 
 def test_wrong_token_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
-    from gemini_openai_proxy.config import reset_settings_cache
+    from gemini_webapi_proxy.config import reset_settings_cache
 
     monkeypatch.setenv("GOP_API_KEY", "secret")
     reset_settings_cache()
@@ -48,7 +48,7 @@ def test_wrong_token_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_correct_token_passes(monkeypatch: pytest.MonkeyPatch) -> None:
-    from gemini_openai_proxy.config import reset_settings_cache
+    from gemini_webapi_proxy.config import reset_settings_cache
 
     monkeypatch.setenv("GOP_API_KEY", "secret")
     reset_settings_cache()
@@ -57,7 +57,7 @@ def test_correct_token_passes(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_non_bearer_scheme_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
-    from gemini_openai_proxy.config import reset_settings_cache
+    from gemini_webapi_proxy.config import reset_settings_cache
 
     monkeypatch.setenv("GOP_API_KEY", "secret")
     reset_settings_cache()

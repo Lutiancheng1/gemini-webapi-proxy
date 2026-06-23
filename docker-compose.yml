@@ -1,13 +1,13 @@
 services:
-  gemini-openai-proxy:
-    image: ghcr.io/lutiancheng1/gemini-openai-proxy:latest
+  gemini-webapi-proxy:
+    image: ghcr.io/lutiancheng1/gemini-webapi-proxy:latest
     build:
       context: .
       dockerfile: Dockerfile
       network: host          # build needs the host's network to reach apt + pip mirrors
       args:
         GOP_BUILD_HTTP_PROXY: ${GOP_BUILD_HTTP_PROXY:-http://127.0.0.1:7897}
-    container_name: gemini-openai-proxy
+    container_name: gemini-webapi-proxy
     network_mode: host      # runtime: share the host's loopback so host.docker.internal isn't needed
     env_file:
       - path: .env

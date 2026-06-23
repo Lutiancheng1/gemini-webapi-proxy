@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from gemini_openai_proxy.client.webapi import WebAPIClient
-from gemini_openai_proxy.errors import UpstreamRefusalError
+from gemini_webapi_proxy.client.webapi import WebAPIClient
+from gemini_webapi_proxy.errors import UpstreamRefusalError
 
 
 @pytest.mark.asyncio

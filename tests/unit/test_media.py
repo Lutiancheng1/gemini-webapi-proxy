@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`gemini_openai_proxy.utils.media`."""
+"""Unit tests for :mod:`gemini_webapi_proxy.utils.media`."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from gemini_openai_proxy.utils.media import (
+from gemini_webapi_proxy.utils.media import (
     cleanup_reference_images,
     decode_data_url,
     normalize_image_field,

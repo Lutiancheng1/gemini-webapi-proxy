@@ -1,13 +1,13 @@
 <div align="center">
 
-# 🌐 Gemini OpenAI Proxy
+# 🌐 Gemini WebAPI Proxy
 
 **OpenAI 兼容的 Google Gemini Web API 网关 — 任何 OpenAI 客户端都能直接用。**
 
-[![PyPI](https://img.shields.io/pypi/v/gemini-openai-proxy.svg)](https://pypi.org/project/gemini-openai-proxy/)
-[![CI](https://img.shields.io/github/actions/workflow/status/Lutiancheng1/gemini-openai-proxy/ci.yml?branch=main)](https://github.com/Lutiancheng1/gemini-openai-proxy/actions)
+[![PyPI](https://img.shields.io/pypi/v/gemini-webapi-proxy.svg)](https://pypi.org/project/gemini-webapi-proxy/)
+[![CI](https://img.shields.io/github/actions/workflow/status/Lutiancheng1/gemini-webapi-proxy/ci.yml?branch=main)](https://github.com/Lutiancheng1/gemini-webapi-proxy/actions)
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/pypi/pyversions/gemini-openai-proxy.svg)](https://pypi.org/project/gemini-openai-proxy/)
+[![Python](https://img.shields.io/pypi/pyversions/gemini-webapi-proxy.svg)](https://pypi.org/project/gemini-webapi-proxy/)
 
 [English](README.md) · [中文](README.zh.md)
 
@@ -33,15 +33,15 @@
 ### 方式 A：`pip`（PyPI）
 
 ```bash
-pip install "gemini-openai-proxy[browser-cookie]"
-gemini-openai-proxy
+pip install "gemini-webapi-proxy[browser-cookie]"
+gemini-webapi-proxy
 ```
 
 ### 方式 B：从源码
 
 ```bash
-git clone https://github.com/Lutiancheng1/gemini-openai-proxy
-cd gemini-openai-proxy
+git clone https://github.com/Lutiancheng1/gemini-webapi-proxy
+cd gemini-webapi-proxy
 python3 -m venv .venv
 .venv/bin/pip install -e ".[browser-cookie,dev]"
 .venv/bin/playwright install chromium
@@ -51,8 +51,8 @@ python3 -m venv .venv
 ### 方式 C：Docker
 
 ```bash
-git clone https://github.com/Lutiancheng1/gemini-openai-proxy
-cd gemini-openai-proxy
+git clone https://github.com/Lutiancheng1/gemini-webapi-proxy
+cd gemini-webapi-proxy
 bash scripts/docker-up.sh
 ```
 
@@ -62,7 +62,7 @@ bash scripts/docker-up.sh
 
 ```bash
 curl -sS http://localhost:4982/health
-# {"status":"ok","service":"gemini-openai-proxy"}
+# {"status":"ok","service":"gemini-webapi-proxy"}
 ```
 
 ## 🔌 接入客户端
@@ -145,9 +145,9 @@ pathlib.Path("out.png").write_bytes(base64.b64decode(img.data[0].b64_json))
 └─────────────────────────────────────────────────┘
 ```
 
-- **可插拔 Cookie 来源**（`gemini_openai_proxy.cookies`）—— 继承 `BaseCookieSource` + 注册即可新增
-- **可插拔图片下载器**（`gemini_openai_proxy.downloaders`）—— 每个下载器都是一个小类，通过 `GOP_DOWNLOADER_CHAIN` 调整顺序
-- **可插拔 Gemini 客户端**（`gemini_openai_proxy.client`）—— 当前实现包了 `gemini-webapi`；未来后端只需实现 `BaseGeminiClient`
+- **可插拔 Cookie 来源**（`gemini_webapi_proxy.cookies`）—— 继承 `BaseCookieSource` + 注册即可新增
+- **可插拔图片下载器**（`gemini_webapi_proxy.downloaders`）—— 每个下载器都是一个小类，通过 `GOP_DOWNLOADER_CHAIN` 调整顺序
+- **可插拔 Gemini 客户端**（`gemini_webapi_proxy.client`）—— 当前实现包了 `gemini-webapi`；未来后端只需实现 `BaseGeminiClient`
 
 ## 🛣️ Roadmap
 
@@ -161,8 +161,8 @@ pathlib.Path("out.png").write_bytes(base64.b64decode(img.data[0].b64_json))
 ## 🧪 开发
 
 ```bash
-git clone https://github.com/Lutiancheng1/gemini-openai-proxy
-cd gemini-openai-proxy
+git clone https://github.com/Lutiancheng1/gemini-webapi-proxy
+cd gemini-webapi-proxy
 python3 -m venv .venv
 .venv/bin/pip install -e ".[browser-cookie,dev]"
 .venv/bin/playwright install chromium

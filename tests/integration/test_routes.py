@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
-from gemini_openai_proxy.app import app
+from gemini_webapi_proxy.app import app
 
 
 def test_health_does_not_require_client() -> None:
@@ -12,7 +12,7 @@ def test_health_does_not_require_client() -> None:
     with TestClient(app) as client:
         resp = client.get("/health")
     assert resp.status_code == 200
-    assert resp.json() == {"status": "ok", "service": "gemini-openai-proxy"}
+    assert resp.json() == {"status": "ok", "service": "gemini-webapi-proxy"}
 
 
 def test_unknown_route_404() -> None:
@@ -34,7 +34,7 @@ def test_models_route_returns_503_when_no_client() -> None:
 
 def test_chat_rejects_stream(monkeypatch) -> None:
     """``stream=true`` must return 400 with a helpful message."""
-    from gemini_openai_proxy.config import reset_settings_cache
+    from gemini_webapi_proxy.config import reset_settings_cache
 
     monkeypatch.setenv("GOP_COOKIE_SOURCE", "env")
     reset_settings_cache()

@@ -27,9 +27,9 @@ if SRC.is_dir() and str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 # Touch the package to trigger cookie-source registration.
-from gemini_openai_proxy import cookies as _cookies  # noqa: F401
-from gemini_openai_proxy.cookies import SOURCES, build_source
-from gemini_openai_proxy.config import get_settings
+from gemini_webapi_proxy import cookies as _cookies  # noqa: F401
+from gemini_webapi_proxy.cookies import SOURCES, build_source
+from gemini_webapi_proxy.config import get_settings
 
 
 def _escape_env(value: str) -> str:

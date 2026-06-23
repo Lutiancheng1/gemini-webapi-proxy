@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start gemini-openai-proxy from a local venv.
+# Start gemini-webapi-proxy from a local venv.
 #
 # Usage:
 #   ./start.sh                 # uses ./.env if present
@@ -25,4 +25,4 @@ if [[ ! -d .venv ]]; then
   .venv/bin/playwright install chromium
 fi
 
-exec .venv/bin/gemini-openai-proxy --host 0.0.0.0 --port "$PORT"
+exec .venv/bin/gemini-webapi-proxy --host 0.0.0.0 --port "$PORT"

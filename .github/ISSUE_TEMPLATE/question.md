@@ -16,7 +16,7 @@ assignees: []
 
 ## Environment
 
-- gemini-openai-proxy version
+- gemini-webapi-proxy version
 - Python version
 - OS
 

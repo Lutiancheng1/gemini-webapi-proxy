@@ -28,13 +28,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Project structure: `src/` layout, `pyproject.toml` (hatchling), `[project.scripts]`
 - Test suite: 69 tests
 - CI workflow: ruff + mypy + pytest matrix (Python 3.10/3.11/3.12, Ubuntu + macOS)
-- Multi-platform Docker image published to `ghcr.io/Lutiancheng1/gemini-openai-proxy`
+- Multi-platform Docker image published to `ghcr.io/Lutiancheng1/gemini-webapi-proxy`
 
 ### Changed
 - All settings now use `GOP_` env prefix; old unprefixed names still work
   as legacy aliases
 - HTTP errors now go through a single `map_api_error` mapper
-- FastAPI app reorganised: routes split into `gemini_openai_proxy.routes.*`
+- FastAPI app reorganised: routes split into `gemini_webapi_proxy.routes.*`
 - `sync_runtime_env.py` now writes the **full** Safari cookie jar
   (35 cookies) to `GOP_GEMINI_COOKIES_RAW`, not just `__Secure-1PSID` /
   `__Secure-1PSIDTS`. Without the extras, the env-mode container

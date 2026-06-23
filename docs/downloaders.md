@@ -42,10 +42,10 @@ wins; later strategies only run if the earlier one returned `None`.
 
 ## Adding a new strategy
 
-Subclass `BaseDownloader` in `src/gemini_openai_proxy/downloaders/`:
+Subclass `BaseDownloader` in `src/gemini_webapi_proxy/downloaders/`:
 
 ```python
-from gemini_openai_proxy.downloaders.base import BaseDownloader, register_downloader
+from gemini_webapi_proxy.downloaders.base import BaseDownloader, register_downloader
 
 @register_downloader
 class MyDownloader(BaseDownloader):

@@ -28,7 +28,7 @@ Cookie 过期后，在本机重新执行同步并 `docker compose restart`。
 ## 一键启动
 
 ```bash
-cd gemini-openai-proxy
+cd gemini-webapi-proxy
 bash scripts/docker-up.sh
 ```
 
@@ -46,7 +46,7 @@ bash scripts/docker-up.sh
 1. **Docker Desktop**：系统设置里勾选 **Start Docker Desktop when you log in**
 2. **容器策略**：`docker-compose.yml` 中 `restart: unless-stopped`
 
-登录 Mac 后流程：Docker Desktop 启动 → 引擎就绪 → `gemini-openai-proxy` 容器自动起来。
+登录 Mac 后流程：Docker Desktop 启动 → 引擎就绪 → `gemini-webapi-proxy` 容器自动起来。
 
 > Cookie 不会自动从 Safari 同步进容器。若隔天 401，在本机执行一次 Cookie 同步 + 重启（见下方「日常维护」）。
 
