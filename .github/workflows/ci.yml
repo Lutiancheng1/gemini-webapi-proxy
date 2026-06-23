@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/ruff-action@v4
+      - uses: astral-sh/ruff-action@v4.0.0
         with:
           # ruff-action v4 exposes a `src:` input that scopes the scan.
           # We use it instead of `args: ... src tests` because v4
@@ -22,7 +22,7 @@ jobs:
           # `args` only adds extra command-line arguments.
           src: "src tests"
           args: "check --output-format=github"
-      - uses: astral-sh/ruff-action@v4
+      - uses: astral-sh/ruff-action@v4.0.0
         with:
           src: "src tests"
           args: "format --check"
