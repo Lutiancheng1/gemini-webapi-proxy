@@ -1,0 +1,25 @@
+# Auto-detect text files; line endings are normalised to LF in the
+# repo, but export-friendly line endings are kept for shell scripts.
+
+*                 text=auto eol=lf
+*.py              text eol=lf
+*.sh              text eol=lf
+*.md              text eol=lf
+*.yml             text eol=lf
+*.yaml            text eol=lf
+*.toml            text eol=lf
+*.json            text eol=lf
+*.txt             text eol=lf
+*.png             binary
+*.jpg             binary
+*.jpeg            binary
+*.gif             binary
+*.webp            binary
+*.pdf             binary
+*.whl             binary
+*.tar.gz          binary
+*.zip             binary
+
+# Export with CRLF on Windows (helps shell-script users there)
+*.bat             text eol=crlf
+*.cmd             text eol=crlf

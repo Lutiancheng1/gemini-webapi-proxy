@@ -1,0 +1,21 @@
+# EditorConfig: https://editorconfig.org
+# Keep formatting consistent across editors (VS Code, PyCharm, vim, etc.)
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{yml,yaml,toml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false  # markdown uses two trailing spaces for line breaks
+
+[Makefile]
+indent_style = tab

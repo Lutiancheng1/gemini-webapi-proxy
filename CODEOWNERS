@@ -1,0 +1,9 @@
+# Default owners for everything in this repo. PRs will automatically
+# request review from the owners listed below. Add path-specific rules
+# when subdirectories need different maintainers.
+
+*       @Lutiancheng1
+
+# Docs
+/docs/  @Lutiancheng1
+*.md    @Lutiancheng1

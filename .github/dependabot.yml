@@ -1,0 +1,28 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "ci"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "deps"
+    labels:
+      - "dependencies"
+    # Don't auto-bump the runtime stack of FastAPI/uvicorn/pydantic;
+    # those need human review because the proxy has to remain
+    # compatible with the OpenAI client ecosystem.
+    ignore:
+      - dependency-name: "fastapi"
+      - dependency-name: "uvicorn"
+      - dependency-name: "pydantic"
+      - dependency-name: "pydantic-settings"
+      - dependency-name: "gemini-webapi"

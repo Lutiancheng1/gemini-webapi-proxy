@@ -35,11 +35,22 @@ to `GOP_INIT_TIMEOUT` seconds while the Gemini client initialises.
    .venv/bin/pytest tests -v
    ```
 
+   Or install the pre-commit hook so all of the above runs
+   automatically on every commit:
+
+   ```bash
+   .venv/bin/pip install pre-commit
+   .venv/bin/pre-commit install
+   ```
+
+4. **Open a PR** against `main` and fill in the template.
+
 4. **Open a PR** against `main` and fill in the template.
 
 ## Coding conventions
 
-* Python 3.10+ syntax (we test 3.10, 3.11, 3.12).
+* Python 3.11+ syntax (we test 3.11, 3.12). The `pyproject.toml`
+  declares `requires-python = ">=3.11"`; this is the source of truth.
 * `from __future__ import annotations` at the top of every module.
 * Type hints on public functions.
 * Module-level logger (`logger = logging.getLogger(__name__)`) instead
