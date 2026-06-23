@@ -65,14 +65,71 @@ def test_registry_pick_image_falls_back_to_kind() -> None:
     assert picked == "gemini-2.5-flash-image"
 
 
-def test_registry_list_openai_includes_aliases() -> None:
+def test_registry_list_openai_curated_set() -> None:
+    """The model list is a curated, fixed-size set:
+
+    * 2 image aliases (always present)
+    * 1 chat entry per chat-capable backend (here: gemini-3-flash)
+
+    Auto-generated aliases (gemini-2.0-flash, gemini-2.5-flash,
+    gemini-3-flash-preview, gemini-3-pro-preview, gemini-advanced)
+    and the empty-id entry must NOT leak in.
+    """
     r = ModelRegistry()
-    r.sync_from_client([_mk("gemini-3-pro", "Pro", "high")])
-    items = r.list_openai_models()
-    ids = {item["id"] for item in items}
-    assert "gemini-3-pro" in ids
-    # The alias was added by sync_from_client
-    assert any(i.startswith("gemini-3-pro") for i in ids)
+    r.sync_from_client([_mk("gemini-3-flash", "Flash", "fast")])
+    r.update_probe("gemini-3-flash", chat_ok=True)
+    items = {i["id"]: i for i in r.list_openai_models()}
+    # 3 entries: 2 image aliases + 1 chat
+    assert items.keys() == {"gemini-2.5-flash-image", "gemini-2.5-pro-image", "gemini-3-flash"}
+    # Image capabilities
+    assert items["gemini-2.5-flash-image"]["capabilities"]["image"] is True
+    assert items["gemini-2.5-pro-image"]["capabilities"]["image"] is True
+    # Chat capabilities
+    assert items["gemini-3-flash"]["capabilities"]["chat"] is True
+    # And no chat capability on the image aliases
+    assert items["gemini-2.5-flash-image"]["capabilities"]["chat"] is False
+    assert items["gemini-2.5-pro-image"]["capabilities"]["chat"] is False
+
+
+def test_registry_list_openai_two_chats_when_two_backends() -> None:
+    """When both gemini-3-flash and gemini-3-pro have chat backends,
+    the list shows both (plus the 2 image aliases = 4 total).
+    """
+    r = ModelRegistry()
+    r.sync_from_client(
+        [
+            _mk("gemini-3-flash", "Flash", "fast"),
+            _mk("gemini-3-pro", "Pro", "advanced"),
+        ]
+    )
+    r.update_probe("gemini-3-flash", chat_ok=True)
+    r.update_probe("gemini-3-pro", chat_ok=True)
+    items = {i["id"]: i for i in r.list_openai_models()}
+    assert items.keys() == {
+        "gemini-2.5-flash-image",
+        "gemini-2.5-pro-image",
+        "gemini-3-flash",
+        "gemini-3-pro",
+    }
+
+
+def test_registry_list_openai_no_auto_aliases() -> None:
+    """Auto-generated aliases like gemini-2.0-flash, gemini-advanced
+    must never appear in the model list even when the underlying
+    model is available.
+    """
+    r = ModelRegistry()
+    r.sync_from_client([_mk("gemini-3-flash", "Flash", "fast")])
+    r.update_probe("gemini-3-flash", chat_ok=True)
+    items = {i["id"] for i in r.list_openai_models()}
+    forbidden = {
+        "gemini-2.0-flash",
+        "gemini-2.5-flash",
+        "gemini-3-flash-preview",
+        "gemini-3-pro-preview",
+        "gemini-advanced",
+    }
+    assert forbidden.isdisjoint(items), f"auto-generated aliases leaked: {forbidden & items}"
 
 
 def test_image_capable_default_overrides() -> None:

@@ -186,13 +186,15 @@ class ModelRegistry:
     _IMAGE_ALIASES: tuple[tuple[str, str, str], ...] = (
         # (alias_id, target_id, human_name)
         ("gemini-2.5-flash-image", "gemini-3-flash", "Gemini 2.5 Flash Image (nano-banana)"),
-        # The "pro" alias points at gemini-3-pro by design, but on
-        # accounts where Google currently blocks pro image generation
-        # the underlying call will return 403.  The proxy surfaces
-        # that 403 verbatim so the client can decide whether to
-        # downgrade to the Flash alias.
+        # The pro image alias is kept so resolve_id() still routes
+        # 'gemini-2.5-pro-image' to 'gemini-3-pro' for clients that
+        # try it, but list_openai_models() no longer advertises it
+        # because on most accounts gemini-3-pro is currently rejected
+        # by Google's image-generation pipeline.
         ("gemini-2.5-pro-image", "gemini-3-pro", "Gemini 2.5 Pro Image (nano-banana-pro)"),
     )
+
+    _IMAGE_ALIAS_IDS: frozenset[str] = frozenset(a for a, _, _ in _IMAGE_ALIASES)
 
     def _ensure_image_aliases(self) -> None:
         """Make sure the two stable image-model aliases exist as entries.
@@ -312,31 +314,47 @@ class ModelRegistry:
     def list_openai_models(
         self, *, image_overrides: set[str] | None = None
     ) -> list[dict[str, Any]]:
+        """Return the small curated set of entries the client can pick.
+
+        We deliberately publish a *fixed* set of model ids so the
+        client can rely on a stable choice.  The proxy knows about
+        at most:
+
+        * One chat entry per available chat backend (gemini-3-flash
+          plus, when present, gemini-3-pro).
+        * The two stable image aliases (``gemini-2.5-flash-image``,
+          ``gemini-2.5-pro-image``) regardless of whether the
+          underlying gemini-webapi call currently succeeds — the
+          403/error is surfaced at request time.
+
+        Auto-generated aliases (``gemini-2.0-flash``,
+        ``gemini-3-flash-preview``, ``gemini-advanced``, ...) and
+        the empty-id entry that gemini-webapi sometimes returns are
+        kept in the registry for inbound ``resolve_id`` so older
+        clients can still send them, but are NOT exposed in the
+        model list.
+        """
         created = int(time.time())
-        seen: set[str] = set()
         out: list[dict[str, Any]] = []
+
+        # 1. Image aliases — always present, always marked image-capable.
+        for alias_id in self._IMAGE_ALIAS_IDS:
+            entry = self._entries.get(alias_id)
+            if entry is not None:
+                out.append(entry.to_openai(created, image_overrides=image_overrides))
+
+        # 2. Chat entries — one per distinct chat backend that has
+        #    either been probed as chat_ok or is named chat by the
+        #    kind heuristic.  Skip entries with no chat backend.
+        seen_chat: set[str] = set()
         for entry in self._entries.values():
-            if entry.id in seen:
+            if entry.id in self._IMAGE_ALIAS_IDS:
                 continue
-            seen.add(entry.id)
-            # If the model wasn't probed (image_ok is False) but its id is
-            # in the image-override set or matches a name hint, treat
-            # it as image-capable in the OpenAI listing.
-            effective_image = entry.image_ok or is_image_capable_name(entry.id, image_overrides)
+            if not (entry.chat_ok or entry.kind in {"chat", "both"}):
+                continue
+            if entry.id in seen_chat:
+                continue
+            seen_chat.add(entry.id)
             out.append(entry.to_openai(created, image_overrides=image_overrides))
-            for alias in entry.aliases:
-                if alias in seen:
-                    continue
-                seen.add(alias)
-                clone = ModelEntry(
-                    id=alias,
-                    display_name=entry.display_name,
-                    description=entry.description,
-                    kind=entry.kind,
-                    chat_ok=entry.chat_ok,
-                    image_ok=effective_image,
-                    probed_at=entry.probed_at,
-                    aliases=[],
-                )
-                out.append(clone.to_openai(created, image_overrides=image_overrides))
+
         return sorted(out, key=lambda x: x["id"])
