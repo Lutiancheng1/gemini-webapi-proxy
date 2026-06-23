@@ -28,7 +28,12 @@ jobs:
   github:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: pypi
+    # Decoupled from `pypi` so a PyPI configuration issue
+    # (e.g. missing Trusted Publisher) doesn't block the
+    # GitHub Release.  Re-run the PyPI job manually after
+    # fixing the PyPI-side config.
+    needs: []
+    if: always()
     steps:
       - uses: actions/checkout@v4
       - name: Create release
