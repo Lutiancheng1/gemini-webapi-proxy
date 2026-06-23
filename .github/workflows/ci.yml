@@ -16,10 +16,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/ruff-action@v1
         with:
-          args: "check --output-format=github"
+          # ruff in pyproject.toml is scoped to src/ + tests/ (see
+          # [tool.ruff].src).  Pin the action to the same path so the
+          # action doesn't fall back to scanning the whole repo.
+          args: "check --output-format=github src tests"
       - uses: astral-sh/ruff-action@v1
         with:
-          args: "format --check"
+          args: "format --check src tests"
 
   typecheck:
     name: Type-check (mypy)
