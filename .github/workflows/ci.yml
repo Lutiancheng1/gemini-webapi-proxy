@@ -14,15 +14,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/ruff-action@v1
+      - uses: astral-sh/ruff-action@v4
         with:
-          # ruff in pyproject.toml is scoped to src/ + tests/ (see
-          # [tool.ruff].src).  Pin the action to the same path so the
-          # action doesn't fall back to scanning the whole repo.
-          args: "check --output-format=github src tests"
-      - uses: astral-sh/ruff-action@v1
+          # ruff-action v4 exposes a `src:` input that scopes the scan.
+          # We use it instead of `args: ... src tests` because v4
+          # defaults src to `github.workspace` (the whole repo) and
+          # `args` only adds extra command-line arguments.
+          src: "src tests"
+          args: "check --output-format=github"
+      - uses: astral-sh/ruff-action@v4
         with:
-          args: "format --check src tests"
+          src: "src tests"
+          args: "format --check"
 
   typecheck:
     name: Type-check (mypy)
