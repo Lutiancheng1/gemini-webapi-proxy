@@ -5,6 +5,7 @@
 | [../README.md](../README.md) | Project overview and quick start |
 | [configuration.md](./configuration.md) | All environment variables |
 | [cookie-sources.md](./cookie-sources.md) | How to provide Gemini Web cookies |
+| [architecture.md](./architecture.md) | Deep dive: data flow, registry, pluggable seams |
 | [downloaders.md](./downloaders.md) | Image download chain and how to extend it |
 | [studio.md](./studio.md) | Wiring an OpenAI-compatible client to the proxy |
 | [api.md](./api.md) | OpenAI-compatible API reference |
