@@ -61,6 +61,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   The wheel path was copying `src` into a separate layer that could
   be served from cache even when the host source had changed, leading
   to stale code inside the image.
+- Dockerfile: wrap the `apt-get` Chromium-deps layer in a 3-attempt
+  retry loop. GitHub Actions runners occasionally hit
+  `503 upstream connect error` from `deb.debian.org` mid-build,
+  failing the job on a transient network blip that a single retry
+  survives. Verified on the Docker workflow (CI run 28033739597).
 
 ### Removed
 - Hard-coded path to `gemini-web-to-api/.env`
