@@ -12,8 +12,8 @@ SDK, `openai-cli`, `ChatBox`, `NextChat`, `LobeChat`, and others.
 | Provider | Custom OpenAI-compatible (or "OpenAI" with a custom base URL) |
 | Base URL | `http://localhost:4982/openai` |
 | API Key | Any non-empty string (e.g. `test`). The proxy does not verify it by default. |
-| Chat model | `gemini-3-flash` (or any id returned by `/openai/v1/models`) |
-| Image model | `gemini-3-flash` / `gemini-3-pro` (same list) |
+| Chat model | `gemini-3-flash` / `gemini-3-pro` (use whatever `/openai/v1/models` advertises) |
+| Image model | `gemini-2.5-flash-image` / `gemini-2.5-pro-image` (stable aliases — chat ids won't be routed to the image pipeline) |
 
 > The Base URL **must end with `/openai`**. Most clients append
 > `/v1/chat/completions` and `/v1/images/generations` automatically.

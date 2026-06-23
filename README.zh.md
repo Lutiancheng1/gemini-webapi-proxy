@@ -131,7 +131,7 @@ pathlib.Path("out.png").write_bytes(base64.b64decode(img.data[0].b64_json))
 ┌─────────────── FastAPI (uvicorn) ───────────────┐
 │  /health    /ready                              │
 │  /openai/v1/models  /openai/v1/chat/completions │
-│  /openai/v1/images/generations  /admin/probe    │
+│  /openai/v1/images/generations  /admin/probe-models │
 │                                                 │
 │  ┌─────────────┐   ┌──────────────────┐         │
 │  │ Cookie      │ → │ GeminiClient pool│ → gemini-webapi
