@@ -46,8 +46,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     https_proxy=${GOP_BUILD_HTTP_PROXY}
 
 # We need Chromium for the image-download fallback chain.
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+# Wrap apt-get in a 3-attempt retry to survive transient 503s from
+# deb.debian.org (GitHub Actions runners occasionally see
+# "upstream connect error or disconnect/reset before headers" —
+# see commit ac15a0f for the failure mode this defends against).
+RUN for i in 1 2 3; do \
+      apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
         tini \
         libnss3 \
@@ -65,7 +69,9 @@ RUN apt-get update && \
         libpango-1.0-0 \
         libcairo2 \
         libasound2 && \
-    rm -rf /var/lib/apt/lists/*
+      rm -rf /var/lib/apt/lists/* && break; \
+      echo "apt-get failed (attempt $i), retrying in $((i*5))s..."; sleep $((i*5)); \
+    done
 
 # Install the *-runtime* deps from pyproject.toml directly.  This
 # avoids the stale-wheel problem of building a wheel from a cached
