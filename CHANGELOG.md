@@ -5,7 +5,7 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.1.0] - 2026-06-23
 
 ### Added
 - Pluggable cookie sources: `browser`, `env`, `file` (Netscape cookies.txt)
@@ -109,6 +109,28 @@ saved to `/tmp/gop-test/`). The image-prompts that previously
 returned `Unknown model name: gemini-2.5-pro-image` now resolve
 correctly to the underlying `gemini-3-pro` runtime entry.
 
-## [0.0.1] — 2025-06-18
+### Project polish (0.1.0)
+
+- README + README.zh: TOC, hero screenshot, "Why this project?" section,
+  troubleshooting quick-reference inline.
+- New `docs/architecture.md` with data-flow diagrams and registry
+  internals.
+- `examples/` rewritten with 4 runnable demos (chat, image, image-with-
+  reference, Outsider Studio setup).
+- GitHub metadata: 8 repository topics, expanded description, homepage
+  URL pointing at `docs/`.
+- Engineering: `CODEOWNERS`, `.editorconfig`, `.gitattributes`,
+  `.pre-commit-config.yaml`, `.github/ISSUE_TEMPLATE/config.yml`,
+  Dependabot for github-actions and pip.
+- CONTRIBUTING.md now correctly references Python 3.11+ and
+  pre-commit hook setup.
+- `docs/zh/` empty directory removed.
+
+## [Unreleased]
+
+### Added
+- (work in progress; this section is for unreleased changes)
+
+## [0.0.1] - 2025-06-18
 
 Internal preview, pre-release, not published to PyPI.
