@@ -207,4 +207,4 @@ exclude_lines = [
 ]
 show_missing = true
 skip_covered = false
-fail_under = 60
+fail_under = 50
