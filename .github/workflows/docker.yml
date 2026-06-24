@@ -133,12 +133,12 @@ jobs:
           # Per-platform images (staging tags) were pushed by the
           # build matrix.  Tag component cannot contain '/', so
           # we replace the platform slash with a dash.
-          manifest_args=()
+          sources=()
           for plat in linux/amd64 linux/arm64; do
             plat_dash=$(echo "$plat" | tr '/' '-')
             staging="${image_repo}:${version}-${plat_dash}"
             echo "Including staging image: $staging"
-            manifest_args+=("--image" "$staging")
+            sources+=("$staging")
           done
 
           # Apply every user-facing tag from metadata-action to the
@@ -146,11 +146,16 @@ jobs:
           # newline-separated TAGS env var through `read` rather
           # than `for tag in $TAGS` because the latter breaks on
           # tags containing shell metacharacters.
+          #
+          # `docker buildx imagetools create` takes SOURCE refs as
+          # positional args (no --image flag), and `--platform` to
+          # declare which platforms the resulting manifest list
+          # should advertise.
           while IFS= read -r tag; do
             [ -z "$tag" ] && continue
             echo "Creating manifest list $tag"
             docker buildx imagetools create \
-              "${manifest_args[@]}" \
+              "${sources[@]}" \
               --tag "$tag" \
               --platform linux/amd64,linux/arm64 \
               --provenance=false
