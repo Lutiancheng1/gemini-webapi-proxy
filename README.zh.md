@@ -5,12 +5,14 @@
 **Google Gemini Web 的 OpenAI 兼容反向代理(对话 + 出图)。**
 任意 OpenAI 客户端直接换 `base_url` 就能用 —— **无需 API Key,复用浏览器登录态**。
 
-[![PyPI](https://img.shields.io/pypi/v/gemini-webapi-proxy.svg)](https://pypi.org/project/gemini-webapi-proxy/)
-[![CI](https://img.shields.io/github/actions/workflow/status/Lutiancheng1/gemini-webapi-proxy/ci.yml?branch=main)](https://github.com/Lutiancheng1/gemini-webapi-proxy/actions)
-[![Release](https://img.shields.io/github/v/release/Lutiancheng1/gemini-webapi-proxy?include_prereleases)](https://github.com/Lutiancheng1/gemini-webapi-proxy/releases)
+[![Release](https://img.shields.io/github/v/release/Lutiancheng1/gemini-webapi-proxy)](https://github.com/Lutiancheng1/gemini-webapi-proxy/releases)
+[![Last Commit](https://img.shields.io/github/last-commit/Lutiancheng1/gemini-webapi-proxy)](https://github.com/Lutiancheng1/gemini-webapi-proxy/commits/main)
+[![CI](https://img.shields.io/github/actions/workflow/status/Lutiancheng1/gemini-webapi-proxy/ci.yml?branch=main&label=lint%2Ftest)](https://github.com/Lutiancheng1/gemini-webapi-proxy/actions)
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/pypi/pyversions/gemini-webapi-proxy.svg)](https://pypi.org/project/gemini-webapi-proxy/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org)
 [![Docker](https://img.shields.io/badge/docker-ghcr.io%2Flutiancheng1%2Fgemini--webapi--proxy-blue)](https://ghcr.io/Lutiancheng1/gemini-webapi-proxy)
+
+`pip install git+https://github.com/Lutiancheng1/gemini-webapi-proxy.git`
 
 [English](README.md) · [中文](README.zh.md)
 
