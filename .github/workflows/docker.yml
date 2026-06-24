@@ -93,6 +93,18 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          # The default attest=type=provenance,mode=max would attach
+          # a separate attestation manifest per image, which then
+          # shows up in the per-platform staging tag's manifest
+          # list as an `architecture: unknown, os: unknown` entry
+          # (no platform descriptor).  When `imagetools create`
+          # merges the per-platform stagings into a single
+          # multi-arch manifest list, that unknown-platform entry
+          # survives and confuses `docker pull` for arm64.
+          # Disabling the attestation makes the per-platform
+          # staging tag a clean two-entry manifest list: the
+          # platform-specific image + its config.
+          provenance: false
 
   merge:
     name: Merge multi-arch manifest
