@@ -142,38 +142,53 @@ jobs:
           version="${{ steps.meta.outputs.version }}"
           image_lower=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
           image_repo="${{ env.REGISTRY }}/${image_lower}"
+
           # Per-platform images (staging tags) were pushed by the
-          # build matrix.  Tag component cannot contain '/', so
-          # we replace the platform slash with a dash.
-          sources=()
+          # build matrix.  Each staging tag is a small manifest
+          # list with one platform entry + an "unknown" 565-byte
+          # attestation from buildx.  We can't pass them straight
+          # to `imagetools create` because the unknown entry would
+          # leak into the user-facing manifest list and break
+          # `docker pull` for arm64.
+          #
+          # Instead, pull the per-platform image **digest** for
+          # each platform (which the registry resolves for us)
+          # and feed those digests to `imagetools create`.  The
+          # digest points at the actual image, not the
+          # attestation.
           for plat in linux/amd64 linux/arm64; do
             plat_dash=$(echo "$plat" | tr '/' '-')
             staging="${image_repo}:${version}-${plat_dash}"
-            echo "Including staging image: $staging"
-            sources+=("$staging")
+            # Extract the manifest digest for the platform we
+            # built.  `docker buildx imagetools inspect` would also
+            # work, but the registry's manifest endpoint is
+            # simpler.
+            digest=$(curl -fsSL \
+              -H "Accept: application/vnd.oci.image.index.v1+json" \
+              "https://${image_repo/\//\/}/v2/${image_repo#*/}/manifests/${staging}" \
+              | python3 -c "import json,sys; d=json.load(sys.stdin); m=[x for x in d['manifests'] if x['platform']['architecture']=='$plat'.split('/')[0] and x['platform']['os']=='linux']; print(m[0]['digest'])")
+            echo "Platform $plat -> digest $digest (from $staging)"
+            # Stash digests in env vars for the next step.
+            if [ "$plat" = "linux/amd64" ]; then
+              echo "DIGEST_AMD64=$digest" >> "$GITHUB_ENV"
+            else
+              echo "DIGEST_ARM64=$digest" >> "$GITHUB_ENV"
+            fi
           done
 
           # Apply every user-facing tag from metadata-action to the
-          # combined multi-arch manifest list.  We feed the
-          # newline-separated TAGS env var through `read` rather
-          # than `for tag in $TAGS` because the latter breaks on
-          # tags containing shell metacharacters.
-          #
-          # `docker buildx imagetools create` takes SOURCE refs as
-          # positional args (no --image flag), and `--platform` to
-          # declare which platforms the resulting manifest list
-          # should advertise.
+          # combined multi-arch manifest list.
           while IFS= read -r tag; do
             [ -z "$tag" ] && continue
             echo "Creating manifest list $tag"
             docker buildx imagetools create \
-              "${sources[@]}" \
+              "${image_repo}@${DIGEST_AMD64}" \
+              "${image_repo}@${DIGEST_ARM64}" \
               --tag "$tag" \
               --platform linux/amd64,linux/arm64
           done <<< "$TAGS"
 
-          # Drop the per-platform staging tags — they're no longer
-          # useful and add noise to the package listing.
+          # Drop the per-platform staging tags.
           for plat in linux/amd64 linux/arm64; do
             plat_dash=$(echo "$plat" | tr '/' '-')
             docker buildx imagetools rm -f "${image_repo}:${version}-${plat_dash}" || true
