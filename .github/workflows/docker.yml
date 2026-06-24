@@ -84,7 +84,7 @@ jobs:
           echo "staging=${staging}"
 
       - name: Build & push (per-platform, no user tags)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: ${{ matrix.platform }}
