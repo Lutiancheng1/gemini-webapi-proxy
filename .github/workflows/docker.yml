@@ -18,6 +18,10 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
+  # Docker tag components must be lowercase; the GitHub repository
+  # name preserves the user's casing, so we lowercase before
+  # composing any tag.  The image registry itself is case-
+  # insensitive on push but the tag literal is not.
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
@@ -66,14 +70,16 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest,enable={{is_default_branch}}
 
-      # Per-platform staging tag: replace the platform slash with a
-      # dash (Docker tag components cannot contain '/').  This
-      # step MUST run before the Build & push step.
+      # Per-platform staging tag: lowercase the registry path
+      # (Docker requires lowercase) and replace the platform
+      # slash with a dash.  This step MUST run before the
+      # Build & push step.
       - name: Compute staging tag
         id: slug
         run: |
           platform_dash=$(echo "${{ matrix.platform }}" | tr '/' '-')
-          staging="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}-${platform_dash}"
+          image_lower=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
+          staging="${{ env.REGISTRY }}/${image_lower}:${{ steps.meta.outputs.version }}-${platform_dash}"
           echo "staging=${staging}" >> "$GITHUB_OUTPUT"
           echo "staging=${staging}"
 
@@ -121,7 +127,8 @@ jobs:
         run: |
           set -euo pipefail
           version="${{ steps.meta.outputs.version }}"
-          image_repo="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+          image_lower=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
+          image_repo="${{ env.REGISTRY }}/${image_lower}"
           # Per-platform images (staging tags) were pushed by the
           # build matrix.  Tag component cannot contain '/', so
           # we replace the platform slash with a dash.
