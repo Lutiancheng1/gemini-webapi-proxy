@@ -11,6 +11,12 @@ Drop-in `base_url` replacement for any OpenAI client — **no API key, reuses yo
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org)
 [![Docker](https://img.shields.io/badge/docker-ghcr.io%2Flutiancheng1%2Fgemini--webapi--proxy-blue)](https://ghcr.io/Lutiancheng1/gemini-webapi-proxy)
+[![Stars](https://img.shields.io/github/stars/Lutiancheng1/gemini-webapi-proxy)](https://github.com/Lutiancheng1/gemini-webapi-proxy/stargazers)
+[![Forks](https://img.shields.io/github/forks/Lutiancheng1/gemini-webapi-proxy)](https://github.com/Lutiancheng1/gemini-webapi-proxy/network/members)
+[![Issues](https://img.shields.io/github/issues/Lutiancheng1/gemini-webapi-proxy)](https://github.com/Lutiancheng1/gemini-webapi-proxy/issues)
+[![macOS](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)](https://github.com/Lutiancheng1/gemini-webapi-proxy)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009485?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)](https://www.docker.com)
 
 `pip install git+https://github.com/Lutiancheng1/gemini-webapi-proxy.git`
 
