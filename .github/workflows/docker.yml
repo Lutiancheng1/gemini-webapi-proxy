@@ -141,12 +141,17 @@ jobs:
           done
 
           # Apply every user-facing tag from metadata-action to the
-          # combined multi-arch manifest list.
+          # combined multi-arch manifest list.  The `--platform`
+          # flag tells buildx which platforms the resulting
+          # manifest list should advertise; without it the
+          # registry may infer 'unknown' for platforms the tag
+          # itself doesn't carry a platform suffix.
           for tag in ${{ steps.meta.outputs.tags }}; do
             echo "Creating manifest list $tag"
             docker buildx imagetools create \
               "${manifest_args[@]}" \
               --tag "$tag" \
+              --platform linux/amd64,linux/arm64 \
               --provenance=false
           done
           # Drop the per-platform staging tags — they're no longer
