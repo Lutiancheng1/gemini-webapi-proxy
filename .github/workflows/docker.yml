@@ -25,10 +25,11 @@ jobs:
   # own per-platform image (tagged with a `-<platform>` suffix)
   # plus a unique digest, never a user-facing tag.  The `merge`
   # job below then combines the per-platform images into a
-  # multi-arch manifest list and re-tags it with the user-facing
-  # tags.  This avoids the previous bug where each matrix job
-  # pushed the same user-facing tag and the later push overwrote
-  # the earlier manifest list with a single-platform image.
+  # single multi-arch manifest list and re-tags it with the
+  # user-facing tags.  This avoids the previous bug where each
+  # matrix job pushed the same user-facing tag and the later push
+  # overwrote the earlier manifest list with a single-platform
+  # image.
   build:
     name: Build (${{ matrix.platform }})
     runs-on: ubuntu-latest
@@ -65,27 +66,24 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build & push (per-platform, no user tags)
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          platforms: ${{ matrix.platform }}
-          push: ${{ github.event_name != 'pull_request' }}
-          # Only the per-platform staging tag — never a user-facing
-          # tag.  The merge job below creates the manifest list.
-          # Note: tag component cannot contain '/', so we replace
-          # the platform slash with a dash via the `slug` step below.
-          tags: ${{ steps.slug.outputs.staging }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Compute staging tag (no '/' in tag component)
+      # Per-platform staging tag: replace the platform slash with a
+      # dash (Docker tag components cannot contain '/').  This
+      # step MUST run before the Build & push step.
+      - name: Compute staging tag
         id: slug
         run: |
           platform_dash=$(echo "${{ matrix.platform }}" | tr '/' '-')
           staging="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}-${platform_dash}"
           echo "staging=${staging}" >> "$GITHUB_OUTPUT"
           echo "staging=${staging}"
+
+      - name: Build & push (per-platform, no user tags)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.slug.outputs.staging }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
