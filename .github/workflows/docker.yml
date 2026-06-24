@@ -73,7 +73,19 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           # Only the per-platform staging tag — never a user-facing
           # tag.  The merge job below creates the manifest list.
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}-${{ matrix.platform }}
+          # Note: tag component cannot contain '/', so we replace
+          # the platform slash with a dash via the `slug` step below.
+          tags: ${{ steps.slug.outputs.staging }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Compute staging tag (no '/' in tag component)
+        id: slug
+        run: |
+          platform_dash=$(echo "${{ matrix.platform }}" | tr '/' '-')
+          staging="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}-${platform_dash}"
+          echo "staging=${staging}" >> "$GITHUB_OUTPUT"
+          echo "staging=${staging}"
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -113,10 +125,12 @@ jobs:
           version="${{ steps.meta.outputs.version }}"
           image_repo="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
           # Per-platform images (staging tags) were pushed by the
-          # build matrix.
+          # build matrix.  Tag component cannot contain '/', so
+          # we replace the platform slash with a dash.
           manifest_args=()
           for plat in linux/amd64 linux/arm64; do
-            staging="${image_repo}:${version}-${plat}"
+            plat_dash=$(echo "$plat" | tr '/' '-')
+            staging="${image_repo}:${version}-${plat_dash}"
             echo "Including staging image: $staging"
             manifest_args+=("--image" "$staging")
           done
@@ -133,5 +147,6 @@ jobs:
           # Drop the per-platform staging tags — they're no longer
           # useful and add noise to the package listing.
           for plat in linux/amd64 linux/arm64; do
-            docker buildx imagetools rm -f "${image_repo}:${version}-${plat}" || true
+            plat_dash=$(echo "$plat" | tr '/' '-')
+            docker buildx imagetools rm -f "${image_repo}:${version}-${plat_dash}" || true
           done
