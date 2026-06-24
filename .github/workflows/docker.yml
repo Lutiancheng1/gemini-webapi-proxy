@@ -124,6 +124,7 @@ jobs:
       - name: Build manifest list and apply user tags
         env:
           DOCKER_CLI_EXPERIMENTAL: enabled
+          TAGS: ${{ steps.meta.outputs.tags }}
         run: |
           set -euo pipefail
           version="${{ steps.meta.outputs.version }}"
@@ -141,19 +142,20 @@ jobs:
           done
 
           # Apply every user-facing tag from metadata-action to the
-          # combined multi-arch manifest list.  The `--platform`
-          # flag tells buildx which platforms the resulting
-          # manifest list should advertise; without it the
-          # registry may infer 'unknown' for platforms the tag
-          # itself doesn't carry a platform suffix.
-          for tag in ${{ steps.meta.outputs.tags }}; do
+          # combined multi-arch manifest list.  We feed the
+          # newline-separated TAGS env var through `read` rather
+          # than `for tag in $TAGS` because the latter breaks on
+          # tags containing shell metacharacters.
+          while IFS= read -r tag; do
+            [ -z "$tag" ] && continue
             echo "Creating manifest list $tag"
             docker buildx imagetools create \
               "${manifest_args[@]}" \
               --tag "$tag" \
               --platform linux/amd64,linux/arm64 \
               --provenance=false
-          done
+          done <<< "$TAGS"
+
           # Drop the per-platform staging tags — they're no longer
           # useful and add noise to the package listing.
           for plat in linux/amd64 linux/arm64; do
